@@ -122,7 +122,7 @@ export default class CompilersHandler {
     /**main page */
     async mainPage(req: Request, res: Response) {
         // log a user visit
-        this.log(`visited`, req.ip)
+        this.log(`visited`, req)
 
         this.router.setPage(res, "main",
             {
@@ -131,41 +131,46 @@ export default class CompilersHandler {
         )
     }
 
-    /**upload file */
-    async uploadFile(req: Request, res: Response) {
 
-        // get ip adress
-        let IP: string = req.ip;
-
-
-        const compileType: string = req.body.type;
-
-        // check if a compile is been selected
-        if (compileType == undefined) {
-            this.log("No compiler been selected!", IP, res);
-            res.end();
-            return;
-        }
-
-        let file = req.file
+    checkFile(req: Request, res: Response) {
+        const file = req.file
 
         // Check if the file exists
         if (!file) {
-            this.log("No file been selected!", IP, res);
+            this.log("No file been selected!", req, res);
             res.end();
             return;
         };
 
         // check the file size
         if (file.size > this.filesizeLimitsMB * MB) {
-            this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, IP, res)
+            this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, req, res)
+            res.end();
             return;
         }
+
+    }
+
+    /**upload file */
+    async uploadFile(req: Request, res: Response) {
+
+        const compileType: number = req.body.type;
+        const file = req.file
+
+
+        this.checkFile(req, res)
+
+        // check if a compile is been selected
+        if (compileType == undefined) {
+            this.log("No compiler been selected!", req, res);
+            return;
+        }
+
 
         // setting properties
         const props = getProps(file.originalname)
         let name = props.name;
-        let nameWT = name + "." + props.type;
+        const nameWT = name + "." + props.type;
 
         // filter words in the name
         if (this.filter.enabled)
@@ -174,31 +179,33 @@ export default class CompilersHandler {
 
 
         // get the right compiler
-        const compiler = this.compilers[this.getIndexByName(compileType)]
+        const compiler = this.compilers[compileType]
+
+        // Check if the compiler actually there
+        if (!compiler) {
+            this.log(`the compiler ${compileType} doesn't exists`, req, res);
+            return;
+        }
 
         // check if the file can work with the compiler
         if (compiler.whitelistInputs[0]) {
             if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
-                this.log(`Not an acceptible file type by the compiler ${compileType}`, IP, res)
+                this.log(`Not an acceptible file type by the compiler ${compileType}`, req, res)
                 return;
             }
         }
 
-
-        // get the name after the convertion
-        let newnameWT = `${name}.${compiler.outputT}`;
-
+        // definig the output name
+        const newnameWT = `${name}.${compiler.outputT}`;
 
         // defining paths
-        var uploadpath: string = Path.join(this.inputdir, nameWT);
-        let downloadpath: string = Path.join(this.outputdir, newnameWT);
+        const uploadpath: string = Path.join(this.inputdir, nameWT);
+        const downloadpath: string = Path.join(this.outputdir, newnameWT);
         const URLFILE = `/files/${newnameWT}`;
 
-        /// doing the work using promise
 
-        // uploading DEPRICATED
-        // await this.uploadTheFile(file, uploadpath);
 
+        /// doing the work using Await
         // compiling 
         await this.compileFile(nameWT, compileType);
 
@@ -246,8 +253,8 @@ export default class CompilersHandler {
      *  #{iPath}            is the input Directory path
      *  #{oPath}           is the output Directory path
      */
-    Command(FileNameWT: string, compilerType: string): string {
-        const compiler = this.compilers[this.getIndexByName(compilerType)];
+    Command(FileNameWT: string, compilerIndex: number): string {
+        const compiler = this.compilers[compilerIndex];
         const path = this.inputdir;
         const pathtoOutput = this.outputdir;
         const name = getProps(FileNameWT).name
@@ -265,10 +272,10 @@ export default class CompilersHandler {
     }
 
     /** this function compiles a file*/
-    compileFile(FileNameWT: string, compileType: string) {
+    compileFile(FileNameWT: string, compileIndex: number) {
 
-        const command = this.Command(FileNameWT, compileType);
-        const compiler = this.compilers[this.getIndexByName(compileType)]
+        const command = this.Command(FileNameWT, compileIndex);
+        const compiler = this.compilers[compileIndex]
         let compilerPath = compiler.CompilerPath;
         if (!Path.isAbsolute(compilerPath)) {
             compilerPath = Path.join(_dirname, compilerPath)
@@ -317,11 +324,14 @@ export default class CompilersHandler {
     }
 
     /**  just a debugger and a messenger to the client if error*/
-    log(errorMes: string, ip?: string, res?: Response) {
-        if (res)
+    log(errorMes: string, req?: Request, res?: Response) {
+        if (res) {
             res.send(this.router.message(errorMes))
+            res.end();
+        }
 
-        let msg = `[${Date.now()}] ${ip ? ip : ""} ${errorMes}`
+        let ip = req ? req.ip ? req.ip : "" : ""
+        let msg = `[${Date.now()}] ${ip} ${errorMes}`
 
         if (this.debug)
             console.log(msg)
@@ -332,6 +342,7 @@ export default class CompilersHandler {
                     if (err) console.warn(`[${Date.now()}] ${ip} Not Able to log into file because the file is not accesible ${logfile}`)
                 }); // => 
         }
+
     }
 
     /** function to delete temp files off input and output folders*/
