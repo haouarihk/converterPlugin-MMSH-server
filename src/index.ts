@@ -1,6 +1,3 @@
-import mult from "multer"
-
-
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 // for running commands
@@ -12,9 +9,8 @@ import * as fs from "fs";
 
 const { path: _dirname } = require("app-root-path");
 console.log(_dirname)
-// for generating random strings
-import * as rs from "randomstring";
-const generateRandomString = rs.generate;
+
+
 
 // for types
 import { Compiler, converterOptions, Dirs } from "../d/types";
@@ -25,9 +21,10 @@ import { Compiler, converterOptions, Dirs } from "../d/types";
 import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory } from "./components/utils.js";
 
 // for filtering names
-import filter from "./components/filter.js";
+import filter, { DefaultFilter } from "./components/filter.js";
 import { join } from 'path';
 import { Request, Response } from "express";
+import multerConfig from "./config/multer.config.js";
 
 
 
@@ -35,6 +32,7 @@ import { Request, Response } from "express";
 
 const defaultProps = {
     PORT: 3000,
+
     compilers: [
         {
             name: "Doc to PDF",
@@ -59,6 +57,8 @@ const defaultProps = {
     filesizeLimitsMB: 100,
 
     randomStringSize: 8,
+
+    filter: DefaultFilter
 }
 
 let MB = 2048
@@ -103,11 +103,11 @@ export default class CompilersHandler {
     /** this function waits for a file from the client */
     setup() {
         // setup the uploader
-        let upload = mult({
-            limits: {
-                fileSize: this.filesizeLimitsMB * MB + 1 * MB
-            }
-        })
+        let upload = multerConfig({
+            randomStringSize: this.randomStringSize,
+            fileSize: this.filesizeLimitsMB,
+            dest: this.router.path("inputdir")
+        }).single("file")
 
         if (this.debug) this.log(this.alldir.maindir)
 
@@ -116,7 +116,7 @@ export default class CompilersHandler {
         // Main Page
         this.app.get(`/${this.alldir.maindir}`, this.mainPage.bind(this));
         // Uploading Page
-        this.app.post(`/${this.alldir.maindir}/upload`, upload.single("file"), this.uploadFile.bind(this));
+        this.app.post(`/${this.alldir.maindir}/upload`, upload, this.uploadFile.bind(this));
     }
 
     /**main page */
@@ -164,6 +164,13 @@ export default class CompilersHandler {
 
         // setting properties
         const props = getProps(file.originalname)
+        let name = props.name;
+        let nameWT = name + "." + props.type;
+
+        // filter words in the name
+        if (this.filter.enabled)
+            name = await filter(name, this.filter)
+
 
 
         // get the right compiler
@@ -172,24 +179,15 @@ export default class CompilersHandler {
         // check if the file can work with the compiler
         if (compiler.whitelistInputs[0]) {
             if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
-
-                this.log("Not an acceptible file type by the compiler " + compileType, IP, res)
+                this.log(`Not an acceptible file type by the compiler ${compileType}`, IP, res)
                 return;
             }
         }
 
-        // generate random string for the name
-        let name = props.name + '_F_' + generateRandomString(this.randomStringSize)
 
-        // filter words in the name
-        if (this.filter.enabled)
-            name = await filter(name, this.filter)
-
-
-
-        // get the name before and after the convertion
-        let nameWT = name + "." + props.type;
+        // get the name after the convertion
         let newnameWT = `${name}.${compiler.outputT}`;
+
 
         // defining paths
         var uploadpath: string = Path.join(this.inputdir, nameWT);
@@ -198,8 +196,8 @@ export default class CompilersHandler {
 
         /// doing the work using promise
 
-        // uploading
-        await this.uploadTheFile(file, uploadpath);
+        // uploading DEPRICATED
+        // await this.uploadTheFile(file, uploadpath);
 
         // compiling 
         await this.compileFile(nameWT, compileType);
@@ -279,8 +277,10 @@ export default class CompilersHandler {
         return this.execShellCommand(`${compiler.commander + " " + compilerPath} ${command}`)
     }
 
-    /** this function download the file to the server*/
+
+    /** this function download the file to the server **DEPRICATED** */
     uploadTheFile(file: any, uploadpath: string) {
+        console.warn("the function uploadTheFile from converterPlugin is **DEPRICATED**")
         // upload the file
         return new Promise((resolve, reject) => {
             file.mv(uploadpath, (err: string) => {

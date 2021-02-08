@@ -12,7 +12,7 @@ function replaceAll(strmain: string, str1: string, str2: string) {
 
 
 
-const DefaultFilter: FilterOps = {
+export const DefaultFilter: FilterOps = {
     enabled: true,
 
     words: [

@@ -9,8 +9,8 @@ import { Request } from "express";
 export function getProps(name: string) {
     const n = name.split(".");
     const n2 = name.split("");
-    const type = name.split(".")[n.length - 1]
-    const other = n2.slice(0, n2.length - type.length - 1).join('')
+    const type: string = name.split(".")[n.length - 1]
+    const other: string = n2.slice(0, n2.length - type.length - 1).join('')
     return { type, name: other }
 }
 

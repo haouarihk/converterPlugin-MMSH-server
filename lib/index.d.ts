@@ -39,7 +39,7 @@ export default class CompilersHandler {
     Command(FileNameWT: string, compilerType: string): string;
     /** this function compiles a file*/
     compileFile(FileNameWT: string, compileType: string): Promise<unknown>;
-    /** this function download the file to the server*/
+    /** this function download the file to the server **DEPRICATED** */
     uploadTheFile(file: any, uploadpath: string): Promise<unknown>;
     /** this function exicute a programmer with params */
     execShellCommand(cmd: string): Promise<unknown>;
