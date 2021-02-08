@@ -106,7 +106,7 @@ export default class CompilersHandler {
         let upload = multerConfig({
             randomStringSize: this.randomStringSize,
             fileSize: this.filesizeLimitsMB,
-            dest: this.router.path("inputdir")
+            dest: this.inputdir
         }).single("file")
 
         if (this.debug) this.log(this.alldir.maindir)
@@ -153,70 +153,73 @@ export default class CompilersHandler {
 
     /**upload file */
     async uploadFile(req: Request, res: Response) {
-
-        const compileType: number = req.body.type;
-        const file = req.file
-
-
-        this.checkFile(req, res)
-
-        // check if a compile is been selected
-        if (compileType == undefined) {
-            this.log("No compiler been selected!", req, res);
-            return;
-        }
+        try {
+            const compileType: number = req.body.type;
+            const file = req.file
 
 
-        // setting properties
-        const props = getProps(file.originalname)
-        let name = props.name;
-        const nameWT = name + "." + props.type;
+            this.checkFile(req, res)
 
-        // filter words in the name
-        if (this.filter.enabled)
-            name = await filter(name, this.filter)
-
-
-
-        // get the right compiler
-        const compiler = this.compilers[compileType]
-
-        // Check if the compiler actually there
-        if (!compiler) {
-            this.log(`the compiler ${compileType} doesn't exists`, req, res);
-            return;
-        }
-
-        // check if the file can work with the compiler
-        if (compiler.whitelistInputs[0]) {
-            if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
-                this.log(`Not an acceptable file type by the compiler ${compileType}`, req, res)
+            // check if a compile is been selected
+            if (compileType == undefined) {
+                this.log("No compiler been selected!", req, res);
                 return;
             }
+
+
+            // setting properties
+            const props = getProps(file.originalname)
+            let name = props.name;
+            const nameWT = name + "." + props.type;
+
+            // filter words in the name
+            if (this.filter.enabled)
+                name = await filter(name, this.filter)
+
+
+
+            // get the right compiler
+            const compiler = this.compilers[compileType]
+
+            // Check if the compiler actually there
+            if (!compiler) {
+                this.log(`the compiler ${compileType} doesn't exists`, req, res);
+                return;
+            }
+
+            // check if the file can work with the compiler
+            if (compiler.whitelistInputs[0]) {
+                if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
+                    this.log(`Not an acceptable file type by the compiler ${compileType}`, req, res)
+                    return;
+                }
+            }
+
+            // definig the output name
+            const newnameWT = `${name}.${compiler.outputT}`;
+
+            // defining paths
+            const uploadpath: string = Path.join(this.inputdir, nameWT);
+            const downloadpath: string = Path.join(this.outputdir, newnameWT);
+            const URLFILE = `/files/${newnameWT}`;
+
+
+
+            /// doing the work using Await
+            // compiling 
+            await this.compileFile(nameWT, compileType);
+
+            // delete the input file
+            await deleteFile(uploadpath);
+
+            // making url for the file
+            await this.makeGetReqForTheFile(URLFILE, downloadpath);
+
+            // redirecting
+            res.redirect(URLFILE);
+        } catch (err) {
+            console.error(err)
         }
-
-        // definig the output name
-        const newnameWT = `${name}.${compiler.outputT}`;
-
-        // defining paths
-        const uploadpath: string = Path.join(this.inputdir, nameWT);
-        const downloadpath: string = Path.join(this.outputdir, newnameWT);
-        const URLFILE = `/files/${newnameWT}`;
-
-
-
-        /// doing the work using Await
-        // compiling 
-        await this.compileFile(nameWT, compileType);
-
-        // delete the input file
-        await deleteFile(uploadpath);
-
-        // making url for the file
-        await this.makeGetReqForTheFile(URLFILE, downloadpath);
-
-        // redirecting
-        res.redirect(URLFILE);
 
     }
 
@@ -276,12 +279,9 @@ export default class CompilersHandler {
 
         const command = this.Command(FileNameWT, compileIndex);
         const compiler = this.compilers[compileIndex]
-        let compilerPath = compiler.CompilerPath;
-        if (!Path.isAbsolute(compilerPath)) {
-            compilerPath = Path.join(_dirname, compilerPath)
-        }
+        let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
-        return this.execShellCommand(`${compiler.commander + " " + compilerPath} ${command}`)
+        return this.execShellCommand(`${compiler.commander} "${compilerPath}" ${command}`)
     }
 
 

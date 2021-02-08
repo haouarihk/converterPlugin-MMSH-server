@@ -1,6 +1,7 @@
 import multer from "multer"
 import { getProps } from "../components/utils.js";
 
+import mime from "mime-types"
 // for generating random strings
 import { generate as generateRandomString } from "randomstring";
 
@@ -20,7 +21,7 @@ export default function upload_file(props: upload_file_propies) {
         },
         filename: (req, file, cb) => {
             const fileprops = getProps(file.originalname)
-            cb(null, fileprops.name + '_F_' + generateRandomString(props.randomStringSize))
+            cb(null, `${fileprops.name}_F_${generateRandomString(props.randomStringSize)}.${mime.extension(file.mimetype)}`)
         }
     });
 
