@@ -86,8 +86,6 @@ export default class CompilersHandler {
 
     /** this function starts the server */
     start() {
-        this.setup()
-
         this.setInputOutputDir()
 
         // deleting garbage before start
@@ -97,6 +95,8 @@ export default class CompilersHandler {
 
         //this.setTextConverter()
         this.GarbageCleaner()
+
+        this.setup()
     }
 
 
