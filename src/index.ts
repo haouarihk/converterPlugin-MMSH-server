@@ -190,7 +190,7 @@ export default class CompilersHandler {
         // check if the file can work with the compiler
         if (compiler.whitelistInputs[0]) {
             if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
-                this.log(`Not an acceptible file type by the compiler ${compileType}`, req, res)
+                this.log(`Not an acceptable file type by the compiler ${compileType}`, req, res)
                 return;
             }
         }
