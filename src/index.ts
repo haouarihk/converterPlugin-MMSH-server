@@ -168,7 +168,7 @@ export default class CompilersHandler {
 
 
             // setting properties
-            const props = getProps(file.originalname)
+            const props = getProps(file.filename)
             let name = props.name;
             const nameWT = name + "." + props.type;
 
