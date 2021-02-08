@@ -303,12 +303,11 @@ export default class CompilersHandler {
     /** this function exicute a programmer with params */
     execShellCommand(cmd: string) {
         return new Promise((resolve, reject) => {
-            exec(cmd, (error: any, stdout: any, stderr: any) => {
+            let execi = exec(cmd, (error: any, stdout: any, stderr: any) => {
                 if (error)
                     console.warn(error);
-
-                setTimeout(() => { resolve(stdout ? stdout : stderr) }, 2000)
             });
+            execi.on('exit', resolve)
         });
     }
 
@@ -373,7 +372,7 @@ export default class CompilersHandler {
                 if (err) throw err;
 
                 for (const file of files) {
-                    var stats = fs.statSync(_dir + file);
+                    var stats = fs.statSync(Path.join(_dir, file));
                     var mtime = stats.mtime;
                     if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * 100) {
                         fs.unlink(Path.join(_dir, file), (err: any) => {
