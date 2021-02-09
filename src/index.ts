@@ -190,7 +190,8 @@ export default class CompilersHandler {
             // check if the file can work with the compiler
             if (compiler.whitelistInputs[0]) {
                 if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
-                    this.log(`Not an acceptable file type by the compiler ${compileType}`, req, res)
+                    this.log(`Not an acceptable file type by the compiler ${compiler.name}\n
+                    it only accepts [${compiler.whitelistInputs.join(`,`)}]`, req, res)
                     return;
                 }
             }
@@ -325,7 +326,7 @@ export default class CompilersHandler {
     /**  just a debugger and a messenger to the client if error*/
     log(errorMes: string, req?: Request, res?: Response) {
         if (res) {
-            res.status(406).send(this.router.message(errorMes))
+            res.status(406).send({ message: errorMes })
             res.end();
         }
 
