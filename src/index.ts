@@ -187,11 +187,16 @@ export default class CompilersHandler {
                 return;
             }
 
-            // check if the file can work with the compiler
+            // check if the compiler can work with the file
             if (compiler.whitelistInputs[0]) {
                 if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
-                    this.log(`Not an acceptable file type by the compiler ${compiler.name}\n
-                    it only accepts [${compiler.whitelistInputs.join(`,`)}]`, req, res)
+                    this.log(
+
+                        `Not an acceptable file type by the compiler 
+                    ${compiler.name}\n it only accepts 
+                    [${compiler.whitelistInputs.join(`,`)}]`
+
+                        , req, res)
                     return;
                 }
             }
@@ -339,7 +344,7 @@ export default class CompilersHandler {
             let logfile = join(this.router.logdir, "log.txt")
             fs.appendFile(logfile, msg,
                 (err: any) => {
-                    if (err) console.warn(`[${Date.now()}] ${ip} Not Able to log into file because the file is not accesible ${logfile}`)
+                    if (err) console.warn(`[${Date.now()}] ${ip} Not Able to log into file because the file is not accesible ${logfile}\n`)
                 }); // => 
         }
 
