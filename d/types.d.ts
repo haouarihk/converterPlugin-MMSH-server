@@ -25,9 +25,6 @@ export interface Plugin {
 }
 
 
-
-
-
 export interface FilterOps {
     enabled: boolean;
 
