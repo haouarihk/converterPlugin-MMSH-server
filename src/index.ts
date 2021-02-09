@@ -325,7 +325,7 @@ export default class CompilersHandler {
     /**  just a debugger and a messenger to the client if error*/
     log(errorMes: string, req?: Request, res?: Response) {
         if (res) {
-            res.status(300).send(this.router.message(errorMes))
+            res.status(406).send(this.router.message(errorMes))
             res.end();
         }
 
