@@ -1,4 +1,4 @@
-import { Compiler, converterOptions, Dirs } from "../d/types";
+import { Compiler, converterOptions, Dirs, Router } from "../d/types";
 import { Request, Response } from "express";
 export default class CompilersHandler {
     deleteallTempFilesOnStart: boolean;
@@ -8,10 +8,11 @@ export default class CompilersHandler {
     randomStringSize: number;
     inputdir: string;
     outputdir: string;
+    /**In Minutes */
     timetoGarbageCleaner: number;
     app: any;
     filter: any;
-    router: any;
+    router: Router;
     debug: any;
     logInFile: any;
     constructor(props?: converterOptions | object);

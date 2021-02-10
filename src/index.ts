@@ -13,7 +13,7 @@ console.log(_dirname)
 
 
 // for types
-import { Compiler, converterOptions, Dirs } from "../d/types";
+import { Compiler, converterOptions, Dirs, Router } from "../d/types";
 
 
 
@@ -50,7 +50,7 @@ const defaultProps = {
 
     logfile: Path.join(_dirname, 'logs', 'converterlog.txt'),
 
-    timetoGarbageCleaner: 14400,
+    timetoGarbageCleaner: 240,
 
     deleteallTempFilesOnStart: true,
 
@@ -61,7 +61,9 @@ const defaultProps = {
     filter: DefaultFilter
 }
 
-let MB = 2048
+const MB = 2048;
+const Minute = 60000;
+
 
 export default class CompilersHandler {
 
@@ -73,13 +75,16 @@ export default class CompilersHandler {
     randomStringSize!: number;
     inputdir!: string;
     outputdir!: string;
+
+    /**In Minutes */
     timetoGarbageCleaner!: number;
 
     app: any;
     filter: any;
-    router: any;
+    router!: Router;
     debug: any;
     logInFile: any;
+
     constructor(props: converterOptions | object = {}) {
         this.getParams({ ...defaultProps, ...props })
     }
@@ -154,6 +159,23 @@ export default class CompilersHandler {
     /**upload file */
     async uploadFile(req: Request, res: Response) {
         try {
+
+            // check for captcha abuse
+            if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+
+                this.log("rickrolled, you tried to abuse the system huh?", req, res);
+            }
+
+            // check for user verification
+            const [stated, msg] = this.router.reCaptchaCheck(req.body["captcha"], req.ip)
+
+            if (!stated) {
+                this.log(msg, req, res);
+            }
+
+            this.log(msg)
+
+
             const compileType: number = req.body.type;
             const file = req.file
 
@@ -319,9 +341,9 @@ export default class CompilersHandler {
 
     // downloader
     async makeGetReqForTheFile(urlfile: string, filepath: string) {
-        this.app.get(urlfile, (_req: Request, res: Response) => {
+        this.app.get(urlfile, (req: Request, res: Response) => {
             if (!fs.existsSync(filepath)) {
-                res.send(this.router.message("sorry the file is no longer avaliable"))
+                res.send(this.log("sorry the file is no longer avaliable", req, res))
             }
             res.download(filepath);
         })
@@ -380,7 +402,7 @@ export default class CompilersHandler {
                 for (const file of files) {
                     var stats = fs.statSync(Path.join(_dir, file));
                     var mtime = stats.mtime;
-                    if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * 100) {
+                    if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * Minute) {
                         fs.unlink(Path.join(_dir, file), (err: any) => {
                             if (err) console.error(err)
                         });

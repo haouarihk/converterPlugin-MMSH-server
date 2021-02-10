@@ -1,3 +1,7 @@
+
+import type { Express, Response } from "express"
+
+
 export interface converterOptions {
     deleteallTempFilesOnStart: boolean;
     app: any;
@@ -41,8 +45,51 @@ export interface FilterOps {
 }
 
 
+export interface Page {
+    name: string;
+    dir: string;
+}
+
+
+export interface Pages {
+    [key: string]: Page
+}
+
 export interface Dirs {
     maindir: string;
     front_end: string;
     back_end: string;
+}
+
+
+
+export interface Router {
+
+    /** get a page with options*/
+    page: (pageName: string, options?: any) => string;
+
+    /** Set a page with options*/
+    setPage: (res: Response, pageName: string, options?: any) => void;
+
+    /** Get one of the costume paths */
+    path: (name: string) => string;
+
+    /** check  this user with google recaptcha  */
+    reCaptchaCheck: (UserToken: string, ip: string) => [stated: boolean, msg: string];
+
+
+    /** hold all dirs for the plugin to know its main files */
+    alldir: Dirs;
+
+    /** holds the folder for its logs */
+    logdir: string;
+
+    /** holds the app that the plugin can use to communicate */
+    app: Express;
+
+    /** holds all possible pages that the plugin can use */
+    pages: Pages;
+
+    /** holds the costume paths */
+    paths: any;
 }
