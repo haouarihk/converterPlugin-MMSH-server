@@ -402,7 +402,7 @@ export default class CompilersHandler {
                 for (const file of files) {
                     var stats = fs.statSync(Path.join(_dir, file));
                     var mtime = stats.mtime;
-                    if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * 100) {
+                    if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * Minute) {
                         fs.unlink(Path.join(_dir, file), (err: any) => {
                             if (err) console.error(err)
                         });
