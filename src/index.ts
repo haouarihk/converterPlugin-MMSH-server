@@ -159,15 +159,15 @@ export default class CompilersHandler {
     /**upload file */
     async uploadFile(req: Request, res: Response) {
         try {
-
+            let userCaptchakey = req.body['g-recaptcha']
             // check for captcha abuse
-            if (req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+            if (userCaptchakey === undefined || userCaptchakey === '' || userCaptchakey === null) {
 
                 this.log("rickrolled, you tried to abuse the system huh?", req, res);
             }
 
             // check for user verification
-            const [stated, msg] = this.router.reCaptchaCheck(req.body["captcha"], req.ip)
+            const [stated, msg] = await this.router.reCaptchaCheck(userCaptchakey, req.ip)
 
             if (!stated) {
                 this.log(msg, req, res);
@@ -358,7 +358,7 @@ export default class CompilersHandler {
         }
 
         let ip = req ? req.ip ? req.ip : "" : ""
-        let msg = `[${Date.now()}] ${ip} ${errorMes}`
+        let msg = `[${Date.now()}] ${ip} ${errorMes}\n`
 
         if (this.debug)
             console.log(msg)
@@ -366,7 +366,7 @@ export default class CompilersHandler {
             let logfile = join(this.router.logdir, "log.txt")
             fs.appendFile(logfile, msg,
                 (err: any) => {
-                    if (err) console.warn(`[${Date.now()}] ${ip} Not Able to log into file because the file is not accesible ${logfile}\n`)
+                    if (err) console.warn(`[${Date.now()}] ${ip} Not Able to log into file because the file is not accesible ${logfile}`)
                 }); // => 
         }
 
