@@ -1,7 +1,6 @@
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 // for running commands
-import { exec } from "child_process";
+var aaa = require("child_process");
+let exec = aaa.exec;
 
 // for file controling
 import * as Path from "path";
