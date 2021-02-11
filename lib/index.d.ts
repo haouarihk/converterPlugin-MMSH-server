@@ -31,16 +31,24 @@ export default class CompilersHandler {
      * commands are:
      * @const {compilerCommand}
      *
-     *  #{CompeleteInputFilePath} is the path + filename +.+ fileType
-     *  #{CompeleteOutputFilePath} is the outputdirectory + filename +.+
-     *  #{CompeleteOutputDirectory} is the output directory
+     * @example
+     * //Main
      *
-     * filetype
-     *  #{ComepeleteFileName}       is the file name with type
-     *  #{name}            is the file name without type
-     *  #{outputT}         is the same as outputT in the object, is the output type
-     *  #{iPath}            is the input Directory path
-     *  #{oPath}           is the output Directory path
+     * #{iPath}
+     * ->is the path for the input file
+     *
+     * #{oPath}
+     * ->is the path for the output folder
+     *
+     * //Costume
+     *
+     * #{name.type}
+     * ->is the file name with type
+     *
+     * #{name}
+     * ->is the file name without type
+     *
+     *
      */
     Command(FileNameWT: string, compilerIndex: number): string;
     /** this function compiles a file*/

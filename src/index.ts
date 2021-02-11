@@ -29,7 +29,7 @@ import multerConfig from "./config/multer.config.js";
 
 
 // for archiving 
-const archiver = require("archive")
+import archiver from "archiver"
 
 
 
