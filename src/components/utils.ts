@@ -2,7 +2,9 @@ import * as path from "path"
 import * as fs from "fs"
 
 import type { Compiler } from "../../d/types"
-import { Request } from "express";
+
+
+
 
 
 
@@ -21,6 +23,14 @@ export function deleteFile(filePath: string) {
             console.log(err)
         }
     })
+}
+
+
+export function deleteDirectory(dirPath: string) {
+    return new Promise((solve) => {
+        fs.rmdir(dirPath, { recursive: true }, solve)
+    })
+
 }
 
 export function deleteAllFilesInDirectory(dir: string) {

@@ -30,8 +30,12 @@ export default class CompilersHandler {
     /** Construct Commands from string
      * commands are:
      * @const {compilerCommand}
+     *
      *  #{CompeleteInputFilePath} is the path + filename +.+ fileType
-     *  #{CompeleteOutputFilePath} is the outputdirectory + filename +.+ filetype
+     *  #{CompeleteOutputFilePath} is the outputdirectory + filename +.+
+     *  #{CompeleteOutputDirectory} is the output directory
+     *
+     * filetype
      *  #{ComepeleteFileName}       is the file name with type
      *  #{name}            is the file name without type
      *  #{outputT}         is the same as outputT in the object, is the output type
@@ -41,6 +45,7 @@ export default class CompilersHandler {
     Command(FileNameWT: string, compilerIndex: number): string;
     /** this function compiles a file*/
     compileFile(FileNameWT: string, compileIndex: number): Promise<unknown>;
+    zipTheOutputDirectory(name: string): Promise<unknown>;
     /** this function download the file to the server **DEPRICATED** */
     uploadTheFile(file: any, uploadpath: string): Promise<unknown>;
     /** this function exicute a programmer with params */

@@ -17,7 +17,7 @@ import { Compiler, converterOptions, Dirs, Router } from "../d/types";
 
 
 // for utils
-import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory } from "./components/utils.js";
+import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory, deleteDirectory } from "./components/utils.js";
 
 // for filtering names
 import filter, { DefaultFilter } from "./components/filter.js";
@@ -26,6 +26,10 @@ import { Request, Response } from "express";
 import multerConfig from "./config/multer.config.js";
 
 
+
+
+// for archiving 
+const archiver = require("archive")
 
 
 
@@ -38,7 +42,6 @@ const defaultProps = {
             commander: "python",
             CompilerPath: `./compilers/compiler1/compiler.py`,
             command: `-o "#{CompeleteOutputFilePath}" -i "#{CompeleteInputFilePath}"`,
-            outputT: "pdf",
             whitelistInputs: ["Doc", "Docx"]
         },
     ],
@@ -223,10 +226,11 @@ export default class CompilersHandler {
             }
 
             // definig the output name
-            const newnameWT = `${name}.${compiler.outputT}`;
+            const newnameWT = `${name}.zip`;
 
             // defining paths
             const uploadpath: string = Path.join(this.inputdir, nameWT);
+            const outputDirPath: string = Path.join(this.outputdir, name);
             const downloadpath: string = Path.join(this.outputdir, newnameWT);
             const URLFILE = `/files/${newnameWT}`;
 
@@ -238,6 +242,12 @@ export default class CompilersHandler {
 
             // delete the input file
             await deleteFile(uploadpath);
+
+            // zip the output folder
+            await this.zipTheOutputDirectory(name)
+
+            // delete the the output folder
+            await deleteDirectory(outputDirPath);
 
             // making url for the file
             await this.makeGetReqForTheFile(URLFILE, downloadpath);
@@ -275,31 +285,64 @@ export default class CompilersHandler {
     /** Construct Commands from string
      * commands are:
      * @const {compilerCommand}   
-     *  #{CompeleteInputFilePath} is the path + filename +.+ fileType
-     *  #{CompeleteOutputFilePath} is the outputdirectory + filename +.+ filetype
-     *  #{ComepeleteFileName}       is the file name with type
-     *  #{name}            is the file name without type
-     *  #{outputT}         is the same as outputT in the object, is the output type
-     *  #{iPath}            is the input Directory path
-     *  #{oPath}           is the output Directory path
+     * 
+     * @example
+     * //Main
+     * 
+     * #{iPath}            
+     * ->is the path for the input file
+     * 
+     * #{oPath}           
+     * ->is the path for the output folder 
+     * 
+     * //Costume
+     * 
+     * #{name.type}       
+     * ->is the file name with type
+     * 
+     * #{name}            
+     * ->is the file name without type
+     * 
+     * 
      */
     Command(FileNameWT: string, compilerIndex: number): string {
+
         const compiler = this.compilers[compilerIndex];
+
         const path = this.inputdir;
-        const pathtoOutput = this.outputdir;
-        const name = getProps(FileNameWT).name
-        const path_name_type = `${Path.join(path, FileNameWT)}`
-        const opath_name_type = `${Path.join(pathtoOutput, name)}.${compiler.outputT}`;
-        // commands are at top
-        let compilerCommand = compiler.command.replace(/#{iPath}/gi, pathtoOutput)//.replace("#{Ipath}", path)
-        compilerCommand = compilerCommand.replace(/#{CompeleteInputFilePath}/gi, path_name_type)
-        compilerCommand = compilerCommand.replace(/#{CompeleteOutputFilePath}/gi, opath_name_type)
-        compilerCommand = compilerCommand.replace(/#{ComepeleteFileName}/gi, FileNameWT)
-        compilerCommand = compilerCommand.replace(/#{outputT}/gi, compiler.outputT)
-        compilerCommand = compilerCommand.replace(/#{name}/gi, name)
+
+
+
+        const name = getProps(FileNameWT).name;
+
+        const pathtoOutput = Path.join(this.outputdir, name);
+        const pathToInput = Path.join(this.inputdir, FileNameWT)
+
+
+        const pathToInputWithType = `${Path.join(path, FileNameWT)}`
+
+
+
+
+        // Main
+        let compilerCommand = compiler.command.replace(/#{iPath}/gi, pathToInput)
+
+        // directory path
         compilerCommand = compilerCommand.replace(/#{oPath}/gi, pathtoOutput)
+
+
+        // costume 
+        compilerCommand = compilerCommand.replace(/#{iPath.type}/gi, pathToInputWithType)
+
+
+        compilerCommand = compilerCommand.replace(/#{name}/gi, name)
+
+        compilerCommand = compilerCommand.replace(/#{name.type}/gi, FileNameWT)
+
+
         return compilerCommand
     }
+
 
     /** this function compiles a file*/
     compileFile(FileNameWT: string, compileIndex: number) {
@@ -309,6 +352,30 @@ export default class CompilersHandler {
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
         return this.execShellCommand(`${compiler.commander} "${compilerPath}" ${command}`)
+    }
+
+
+    async zipTheOutputDirectory(name: string) {
+        return new Promise((solve, reject) => {
+
+            // input directory
+            const output_dir = join(this.outputdir, name)
+            // output file
+            const output = fs.createWriteStream(`${output_dir}.zip`);
+
+            // ziping technic
+            const archive = archiver('zip');
+
+            archive.pipe(output);
+
+            archive.directory(output_dir, false);
+
+
+
+            output.on('close', solve);
+            archive.on('error', reject);
+            archive.finalize();
+        })
     }
 
 
