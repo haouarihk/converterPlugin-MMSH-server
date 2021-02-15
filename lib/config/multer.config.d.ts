@@ -1,4 +1,4 @@
-import * as multer from "multer";
+import multer from "multer";
 interface upload_file_propies {
     randomStringSize: number;
     fileSize: number;

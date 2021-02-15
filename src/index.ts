@@ -1,13 +1,13 @@
 // for running commands
-var aaa = require("child_process");
-let exec = aaa.exec;
+import { exec } from "child_process";
+
 
 // for file controling
 import * as Path from "path";
 import * as fs from "fs";
 
-const { path: _dirname } = require("app-root-path");
-console.log(_dirname)
+import arp from "app-root-path";
+const _dirname = arp.path
 
 
 

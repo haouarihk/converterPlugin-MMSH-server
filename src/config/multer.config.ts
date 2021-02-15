@@ -1,4 +1,4 @@
-import * as multer from "multer"
+import multer from "multer"
 import { getProps } from "../components/utils.js";
 
 import * as mime from "mime-types"
