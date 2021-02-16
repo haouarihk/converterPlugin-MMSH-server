@@ -30,6 +30,7 @@ import multerConfig from "./config/multer.config.js";
 
 // for archiving 
 import archiver from "archiver"
+import { generate } from "randomstring";
 
 
 
@@ -177,6 +178,8 @@ export default class CompilersHandler {
 
             this.log(msg)
 
+            // generate user token for the socket
+            let userToken = generate();
 
             const compileType: number = req.body.type;
             const file = req.file
@@ -259,6 +262,11 @@ export default class CompilersHandler {
         }
 
     }
+
+
+
+
+
 
     /**depricated!! */
     setTextConverter() {

@@ -77,6 +77,9 @@ export interface Router {
     /** check  this user with google recaptcha  */
     reCaptchaCheck: (UserToken: string, ip: string) => [stated: boolean, msg: string];
 
+    /** Send message on progress page */
+    newSocketMessage: (token: string, event: string, message: any) => void;
+
 
     /** hold all dirs for the plugin to know its main files */
     alldir: Dirs;
