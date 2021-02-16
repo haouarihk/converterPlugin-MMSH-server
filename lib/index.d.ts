@@ -22,9 +22,10 @@ export default class CompilersHandler {
     setup(): void;
     /**main page */
     mainPage(req: Request, res: Response): Promise<void>;
-    checkFile(req: Request, res: Response): void;
+    checkFile(req: Request, resOrToken: any): void;
     /**upload file */
     uploadFile(req: Request, res: Response): Promise<void>;
+    convert(token: string, req: Request): Promise<void>;
     /**depricated!! */
     setTextConverter(): void;
     /** Construct Commands from string
@@ -52,15 +53,15 @@ export default class CompilersHandler {
      */
     Command(FileNameWT: string, compilerIndex: number): string;
     /** this function compiles a file*/
-    compileFile(FileNameWT: string, compileIndex: number): Promise<unknown>;
+    compileFile(token: string, FileNameWT: string, compileIndex: number): Promise<unknown>;
     zipTheOutputDirectory(name: string): Promise<unknown>;
     /** this function download the file to the server **DEPRICATED** */
     uploadTheFile(file: any, uploadpath: string): Promise<unknown>;
     /** this function exicute a programmer with params */
-    execShellCommand(cmd: string): Promise<unknown>;
+    execShellCommand(cmd: string, stdcb: Function): Promise<unknown>;
     makeGetReqForTheFile(urlfile: string, filepath: string): Promise<void>;
     /**  just a debugger and a messenger to the client if error*/
-    log(errorMes: string, req?: Request, res?: Response): void;
+    log(errorMes: string, req?: Request, resOrToken?: any): void;
     /** function to delete temp files off input and output folders*/
     deleteGarbage(): void;
     /** get compiler by its name*/

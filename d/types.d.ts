@@ -80,6 +80,11 @@ export interface Router {
     /** Send message on progress page */
     newSocketMessage: (token: string, event: string, message: any) => void;
 
+    /** Add new socket token available */
+    newSocketUser: (token: string) => void;
+
+    /** End user connection */
+    endSocketUser: (token: string) => void;
 
     /** hold all dirs for the plugin to know its main files */
     alldir: Dirs;

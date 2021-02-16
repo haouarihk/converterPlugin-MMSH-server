@@ -22,7 +22,7 @@ import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory, deleteDirec
 // for filtering names
 import filter, { DefaultFilter } from "./components/filter.js";
 import { join } from 'path';
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
 import multerConfig from "./config/multer.config.js";
 
 
@@ -31,6 +31,7 @@ import multerConfig from "./config/multer.config.js";
 // for archiving 
 import archiver from "archiver"
 import { generate } from "randomstring";
+import { type } from "os";
 
 
 
@@ -140,20 +141,25 @@ export default class CompilersHandler {
     }
 
 
-    checkFile(req: Request, res: Response) {
+    checkFile(req: Request, resOrToken: any) {
         const file = req.file
+
+        const cutConnection = () => {
+            if (typeof resOrToken == typeof Response)
+                resOrToken.end();
+        }
 
         // Check if the file exists
         if (!file) {
-            this.log("No file been selected!", req, res);
-            res.end();
+            this.log("No file been selected!", req, resOrToken);
+            cutConnection();
             return;
         };
 
         // check the file size
         if (file.size > this.filesizeLimitsMB * MB) {
-            this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, req, res)
-            res.end();
+            this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, req, resOrToken)
+            cutConnection();
             return;
         }
 
@@ -162,7 +168,7 @@ export default class CompilersHandler {
     /**upload file */
     async uploadFile(req: Request, res: Response) {
         try {
-            let userCaptchakey = req.body['g-recaptcha']
+            const userCaptchakey = req.body['g-recaptcha']
             // check for captcha abuse
             if (userCaptchakey === undefined || userCaptchakey === '' || userCaptchakey === null) {
 
@@ -179,84 +185,14 @@ export default class CompilersHandler {
             this.log(msg)
 
             // generate user token for the socket
-            let userToken = generate();
+            const token = generate();
+            // make available token for a user to access
+            this.router.newSocketUser(token)
+            // send the token to the user
+            res.send(token)
 
-            const compileType: number = req.body.type;
-            const file = req.file
-
-
-            this.checkFile(req, res)
-
-            // check if a compile is been selected
-            if (compileType == undefined) {
-                this.log("No compiler been selected!", req, res);
-                return;
-            }
-
-
-            // setting properties
-            const props = getProps(file.filename)
-            let name = props.name;
-            const nameWT = name + "." + props.type;
-
-            // filter words in the name
-            if (this.filter.enabled)
-                name = await filter(name, this.filter)
-
-
-
-            // get the right compiler
-            const compiler = this.compilers[compileType]
-
-            // Check if the compiler actually there
-            if (!compiler) {
-                this.log(`the compiler ${compileType} doesn't exists`, req, res);
-                return;
-            }
-
-            // check if the compiler can work with the file
-            if (compiler.whitelistInputs[0]) {
-                if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
-                    this.log(
-
-                        `Not an acceptable file type by the compiler 
-                    ${compiler.name}\n it only accepts 
-                    [${compiler.whitelistInputs.join(`,`)}]`
-
-                        , req, res)
-                    return;
-                }
-            }
-
-            // definig the output name
-            const newnameWT = `${name}.zip`;
-
-            // defining paths
-            const uploadpath: string = Path.join(this.inputdir, nameWT);
-            const outputDirPath: string = Path.join(this.outputdir, name);
-            const downloadpath: string = Path.join(this.outputdir, newnameWT);
-            const URLFILE = `/files/${newnameWT}`;
-
-
-
-            /// doing the work using Await
-            // compiling 
-            await this.compileFile(nameWT, compileType);
-
-            // delete the input file
-            await deleteFile(uploadpath);
-
-            // zip the output folder
-            await this.zipTheOutputDirectory(name)
-
-            // delete the the output folder
-            await deleteDirectory(outputDirPath);
-
-            // making url for the file
-            await this.makeGetReqForTheFile(URLFILE, downloadpath);
-
-            // redirecting
-            res.redirect(URLFILE);
+            // start converting
+            this.convert(token, req)
         } catch (err) {
             console.error(err)
         }
@@ -264,8 +200,88 @@ export default class CompilersHandler {
     }
 
 
+    async convert(token: string, req: Request) {
+        const compileType: number = req.body.type;
+        const file = req.file
 
 
+        this.checkFile(req, token)
+
+        // check if a compile is been selected
+        if (compileType == undefined) {
+            this.log("No compiler has been selected!", req, token);
+            return;
+        }
+
+
+        // setting properties
+        const props = getProps(file.filename)
+        let name = props.name;
+        const nameWT = name + "." + props.type;
+
+        // filter words in the name
+        if (this.filter.enabled)
+            name = await filter(name, this.filter)
+
+
+
+        // get the right compiler
+        const compiler = this.compilers[compileType]
+
+        // Check if the compiler actually there
+        if (!compiler) {
+            this.log(`the compiler ${compileType} doesn't exists`, req, token);
+            return;
+        }
+
+        // check if the compiler can work with the file
+        if (compiler.whitelistInputs[0]) {
+            if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
+                this.log(
+
+                    `Not an acceptable file type by the compiler 
+                    ${compiler.name}\n it only accepts 
+                    [${compiler.whitelistInputs.join(`,`)}]`
+
+                    , req, token)
+                return;
+            }
+        }
+
+        // definig the output name
+        const newnameWT = `${name}.zip`;
+
+        // defining paths
+        const uploadpath: string = Path.join(this.inputdir, nameWT);
+        const outputDirPath: string = Path.join(this.outputdir, name);
+        const downloadpath: string = Path.join(this.outputdir, newnameWT);
+        const URLFILE = `/files/${newnameWT}`;
+
+
+
+        /// doing the work using Await
+        // compiling 
+        await this.compileFile(token, nameWT, compileType);
+
+        // delete the input file
+        await deleteFile(uploadpath);
+
+        // zip the output folder
+        await this.zipTheOutputDirectory(name)
+
+        // delete the the output folder
+        await deleteDirectory(outputDirPath);
+
+        // making url for the file
+        await this.makeGetReqForTheFile(URLFILE, downloadpath);
+
+        // redirecting
+        //res.redirect(URLFILE);
+        // socket way
+        this.router.newSocketMessage(token, "url", URLFILE);
+
+        this.router.endSocketUser(token);
+    }
 
 
     /**depricated!! */
@@ -353,13 +369,16 @@ export default class CompilersHandler {
 
 
     /** this function compiles a file*/
-    compileFile(FileNameWT: string, compileIndex: number) {
+    compileFile(token: string, FileNameWT: string, compileIndex: number) {
 
         const command = this.Command(FileNameWT, compileIndex);
         const compiler = this.compilers[compileIndex]
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
-        return this.execShellCommand(`${compiler.commander} "${compilerPath}" ${command}`)
+        return this.execShellCommand(`${compiler.commander} "${compilerPath}" ${command}`, (stdout: string) => {
+            // socket.io sending logs to the user on the proccess
+            this.router.newSocketMessage(token, "log", stdout)
+        })
     }
 
 
@@ -403,11 +422,13 @@ export default class CompilersHandler {
     }
 
     /** this function exicute a programmer with params */
-    execShellCommand(cmd: string) {
+    execShellCommand(cmd: string, stdcb: Function) {
         return new Promise((resolve, reject) => {
             let execi = exec(cmd, (error: any, stdout: any, stderr: any) => {
                 if (error)
                     console.warn(error);
+
+                stdcb(stdout)
             });
             execi.on('exit', resolve)
         });
@@ -425,11 +446,15 @@ export default class CompilersHandler {
     }
 
     /**  just a debugger and a messenger to the client if error*/
-    log(errorMes: string, req?: Request, res?: Response) {
-        if (res) {
-            res.status(406).send({ message: errorMes })
-            res.end();
-        }
+    log(errorMes: string, req?: Request, resOrToken?: any) {
+        if (resOrToken)
+            if (typeof resOrToken == typeof Response) {
+                resOrToken.status(406).send({ message: errorMes })
+                resOrToken.end();
+            } else {
+                this.router.newSocketMessage(resOrToken, "log", errorMes)
+            }
+
 
         let ip = req ? req.ip ? req.ip : "" : ""
         let msg = `[${Date.now()}] ${ip} ${errorMes}\n`
