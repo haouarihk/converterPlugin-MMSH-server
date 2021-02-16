@@ -6,7 +6,7 @@ import * as mime from "mime-types"
 import { generate as generateRandomString } from "randomstring";
 import { Request } from "express";
 
-let MB = 2048;
+let MB = 1024 * 1024;
 
 interface upload_file_propies {
     randomStringSize: number;
