@@ -189,7 +189,7 @@ export default class CompilersHandler {
             // make available token for a user to access
             this.router.newSocketUser(token)
             // send the token to the user
-            res.send(token)
+            res.send({ token })
 
             // start converting
             this.convert(token, req)
