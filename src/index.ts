@@ -184,6 +184,10 @@ export default class CompilersHandler {
 
             this.log(msg)
 
+
+            this.checkFile(req, res)
+
+
             // generate user token for the socket
             const token = generate();
             // make available token for a user to access
@@ -207,8 +211,6 @@ export default class CompilersHandler {
         const compileType: number = req.body.type;
         const file = req.file
 
-
-        this.checkFile(req, token)
 
         // check if a compile is been selected
         if (compileType == undefined) {

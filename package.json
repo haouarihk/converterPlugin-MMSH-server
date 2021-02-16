@@ -1,6 +1,6 @@
 {
   "name": "converter-toless-plugin",
-  "version": "0.1.232",
+  "version": "0.1.24",
   "description": "this is a plugin",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
