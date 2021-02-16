@@ -65,7 +65,7 @@ const defaultProps = {
     filter: DefaultFilter
 }
 
-const MB = 2048;
+const MB = 1024 * 1024;
 const Minute = 60000;
 
 
@@ -141,30 +141,6 @@ export default class CompilersHandler {
     }
 
 
-    checkFile(req: Request, resOrToken: any) {
-        const file = req.file
-
-        const cutConnection = () => {
-            if (typeof resOrToken == typeof Response)
-                resOrToken.end();
-        }
-
-        // Check if the file exists
-        if (!file) {
-            this.log("No file been selected!", req, resOrToken);
-            cutConnection();
-            return;
-        };
-
-        // check the file size
-        if (file.size > this.filesizeLimitsMB * MB) {
-            this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, req, resOrToken)
-            cutConnection();
-            return;
-        }
-
-    }
-
     /**upload file */
     async uploadFile(req: Request, res: Response) {
         try {
@@ -185,7 +161,27 @@ export default class CompilersHandler {
             this.log(msg)
 
 
-            this.checkFile(req, res)
+            const file = req.file
+
+            const cutConnection = () => {
+                if (typeof res == typeof Response)
+                    res.end();
+            }
+
+            // Check if the file exists
+            if (!file) {
+                this.log("No file been selected!", req, res);
+                cutConnection();
+                return;
+            };
+
+            // check the file size
+            if (file.size > this.filesizeLimitsMB * MB) {
+                this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, req, res)
+                cutConnection();
+                return;
+            }
+
 
 
             // generate user token for the socket
@@ -417,11 +413,11 @@ export default class CompilersHandler {
     execShellCommand(cmd: string, stdcb: Function) {
         const execi = exec(cmd, (error, stdout, stderr) => {
             if (error)
-                console.warn(error);
+                stdcb(error);
             if (stdout)
-                console.log(stdout)
+                stdcb(stdout)
             if (stderr)
-                console.log(stderr)
+                stdcb(stderr)
         });
 
         return new Promise((resolve) => {

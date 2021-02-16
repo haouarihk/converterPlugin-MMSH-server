@@ -22,7 +22,6 @@ export default class CompilersHandler {
     setup(): void;
     /**main page */
     mainPage(req: Request, res: Response): Promise<void>;
-    checkFile(req: Request, resOrToken: any): void;
     /**upload file */
     uploadFile(req: Request, res: Response): Promise<void>;
     convert(token: string, req: Request): Promise<void>;
