@@ -22,7 +22,7 @@ import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory, deleteDirec
 // for filtering names
 import filter, { DefaultFilter } from "./components/filter.js";
 import { join } from 'path';
-import { Request, response, Response } from "express";
+import { Request, Response } from "express";
 import multerConfig from "./config/multer.config.js";
 
 
@@ -31,9 +31,9 @@ import multerConfig from "./config/multer.config.js";
 // for archiving 
 import archiver from "archiver"
 import { generate } from "randomstring";
-import { type } from "os";
 
-
+//@ts-ignore
+import { aforSec } from "aforwait";
 
 const defaultProps = {
     PORT: 3000,
@@ -192,6 +192,8 @@ export default class CompilersHandler {
             res.status(200).send(token)
             res.end();
 
+            await aforSec(1)
+
             // start converting
             this.convert(token, req)
         } catch (err) {
@@ -265,7 +267,6 @@ export default class CompilersHandler {
         // compiling 
         await this.compileFile(token, nameWT, compileType);
 
-        this.router.newSocketMessage(token, "log", "deleting temp file");
         // delete the input file
         await deleteFile(uploadpath);
 
@@ -273,7 +274,6 @@ export default class CompilersHandler {
         // zip the output folder
         await this.zipTheOutputDirectory(name)
 
-        this.router.newSocketMessage(token, "log", "deleting the folder");
         // delete the the output folder
         await deleteDirectory(outputDirPath);
 
@@ -411,24 +411,8 @@ export default class CompilersHandler {
     }
 
 
-    /** this function download the file to the server **DEPRICATED** */
-    uploadTheFile(file: any, uploadpath: string) {
-        console.warn("the function uploadTheFile from converterPlugin is **DEPRICATED**")
-        // upload the file
-        return new Promise((resolve, reject) => {
-            file.mv(uploadpath, (err: string) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    setTimeout(resolve, 2000)
-                }
-            })
-        })
-    }
-
     /** this function exicute a programmer with params */
     execShellCommand(cmd: string, stdcb: Function) {
-        stdcb("starting ..")
         const execi = exec(cmd, (error, stdout, stderr) => {
             if (error)
                 console.warn(error);
