@@ -36,8 +36,6 @@ import { generate } from "randomstring";
 import { aforSec } from "aforwait";
 
 const defaultProps = {
-    PORT: 3000,
-
     compilers: [
         {
             name: "Doc to PDF",
