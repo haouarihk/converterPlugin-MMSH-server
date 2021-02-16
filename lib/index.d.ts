@@ -55,8 +55,6 @@ export default class CompilersHandler {
     /** this function compiles a file*/
     compileFile(token: string, FileNameWT: string, compileIndex: number): Promise<unknown>;
     zipTheOutputDirectory(name: string): Promise<unknown>;
-    /** this function download the file to the server **DEPRICATED** */
-    uploadTheFile(file: any, uploadpath: string): Promise<unknown>;
     /** this function exicute a programmer with params */
     execShellCommand(cmd: string, stdcb: Function): Promise<unknown>;
     makeGetReqForTheFile(urlfile: string, filepath: string): Promise<void>;

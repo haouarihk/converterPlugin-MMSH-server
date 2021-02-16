@@ -123,9 +123,9 @@ export default class CompilersHandler {
         this.app.set('trust proxy', true)
 
         // Main Page
-        this.app.get(`/${this.alldir.maindir}`, this.mainPage.bind(this));
+        this.app.get(`/${this.alldir.maindir}`, (req: Request, res: Response) => this.mainPage(req, res));
         // Uploading Page
-        this.app.post(`/${this.alldir.maindir}/upload`, upload, this.uploadFile.bind(this));
+        this.app.post(`/${this.alldir.maindir}/upload`, upload, (req: Request, res: Response) => this.uploadFile(req, res));
     }
 
     /**main page */
