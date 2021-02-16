@@ -1,13 +1,13 @@
 {
   "name": "converter-toless-plugin",
-  "version": "0.1.02",
+  "version": "0.1.222",
   "description": "this is a plugin",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -watch",
-    "pub": "npm run build && npm publish"
+    "pub": "tsc && npm publish"
   },
   "keywords": [],
   "author": "wolfpat01",

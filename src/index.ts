@@ -189,7 +189,8 @@ export default class CompilersHandler {
             // make available token for a user to access
             this.router.newSocketUser(token)
             // send the token to the user
-            res.send({ token })
+            res.status(200).send(token)
+            res.end();
 
             // start converting
             this.convert(token, req)
@@ -260,18 +261,23 @@ export default class CompilersHandler {
 
 
         /// doing the work using Await
+        this.router.newSocketMessage(token, "log", "Compiling");
         // compiling 
         await this.compileFile(token, nameWT, compileType);
 
+        this.router.newSocketMessage(token, "log", "deleting temp file");
         // delete the input file
         await deleteFile(uploadpath);
 
+        this.router.newSocketMessage(token, "log", "zipping the folder");
         // zip the output folder
         await this.zipTheOutputDirectory(name)
 
+        this.router.newSocketMessage(token, "log", "deleting the folder");
         // delete the the output folder
         await deleteDirectory(outputDirPath);
 
+        this.router.newSocketMessage(token, "log", "making a request");
         // making url for the file
         await this.makeGetReqForTheFile(URLFILE, downloadpath);
 
@@ -279,7 +285,6 @@ export default class CompilersHandler {
         //res.redirect(URLFILE);
         // socket way
         this.router.newSocketMessage(token, "url", URLFILE);
-
         this.router.endSocketUser(token);
     }
 
@@ -423,14 +428,18 @@ export default class CompilersHandler {
 
     /** this function exicute a programmer with params */
     execShellCommand(cmd: string, stdcb: Function) {
-        return new Promise((resolve, reject) => {
-            let execi = exec(cmd, (error: any, stdout: any, stderr: any) => {
-                if (error)
-                    console.warn(error);
+        stdcb("starting ..")
+        const execi = exec(cmd, (error, stdout, stderr) => {
+            if (error)
+                console.warn(error);
+            if (stdout)
+                console.log(stdout)
+            if (stderr)
+                console.log(stderr)
+        });
 
-                stdcb(stdout)
-            });
-            execi.on('exit', resolve)
+        return new Promise((resolve) => {
+            execi.on('exit', resolve);
         });
     }
 
