@@ -1,4 +1,4 @@
-import * as path from "path"
+import { join } from "path"
 import * as fs from "fs"
 
 import type { Compiler } from "../../d/types"
@@ -39,12 +39,12 @@ export function deleteAllFilesInDirectory(dir: string) {
 
         for (const file of files) {
             try {
-                fs.unlink(path.join(dir, file), err => {
+                fs.unlink(join(dir, file), err => {
                     if (err) throw err;
                 });
             } catch {
                 try {
-                    deleteDirectory(path.join(dir, file))
+                    deleteDirectory(join(dir, file))
                 } catch (err) {
                     throw err
                 }

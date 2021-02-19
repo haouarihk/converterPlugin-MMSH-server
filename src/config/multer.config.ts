@@ -1,7 +1,7 @@
-import multer from "multer"
-import { getProps } from "../components/utils.js";
+import * as multer from "multer"
+import { getProps } from "../components/utils";
 
-import * as mime from "mime-types"
+import { extension } from "mime-types"
 // for generating random strings
 import { generate as generateRandomString } from "randomstring";
 import { Request } from "express";
@@ -22,7 +22,7 @@ export default function upload_file(props: upload_file_propies) {
         },
         filename: (req: Request<any, any, any, any, Record<string, any>>, file: any, cb: (error: Error | null, filename: string) => void) => {
             const fileprops = getProps(file.originalname)
-            cb(null, `${fileprops.name}_F_${generateRandomString(props.randomStringSize)}.${mime.extension(file.mimetype)}`)
+            cb(null, `${fileprops.name}_F_${generateRandomString(props.randomStringSize)}.${extension(file.mimetype)}`)
         }
     });
 

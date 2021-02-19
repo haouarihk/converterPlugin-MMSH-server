@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
-    "module": "ES2020",
-    "target": "ESNext",
-    "declaration": true,
+    "module": "CommonJS",
+    "target": "ES6",
+    "lib": [
+      "ES6"
+    ],
     "outDir": "./lib",
-    "strict": true,
     "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true
   },
   "include": [
     "src/**/*",

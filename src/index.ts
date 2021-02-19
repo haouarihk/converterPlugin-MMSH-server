@@ -3,11 +3,9 @@ import { exec } from "child_process";
 
 
 // for file controling
-import * as Path from "path";
 import * as fs from "fs";
 
-import arp from "app-root-path";
-const _dirname = arp.path
+import { path as _dirname } from "app-root-path";
 
 
 
@@ -15,21 +13,20 @@ const _dirname = arp.path
 import { Compiler, converterOptions, Dirs, Router } from "../d/types";
 
 
-
 // for utils
-import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory, deleteDirectory } from "./components/utils.js";
+import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory, deleteDirectory } from "./components/utils";
 
 // for filtering names
-import filter, { DefaultFilter } from "./components/filter.js";
+import filter, { DefaultFilter } from "./components/filter";
 import { join } from 'path';
 import { Request, Response } from "express";
-import multerConfig from "./config/multer.config.js";
+import multerConfig from "./config/multer.config";
 
 
 
 
 // for archiving 
-import archiver from "archiver"
+import * as archiver from "archiver"
 import { generate } from "randomstring";
 
 //@ts-ignore
@@ -50,7 +47,7 @@ const defaultProps = {
 
     logInFile: true,
 
-    logfile: Path.join(_dirname, 'logs', 'converterlog.txt'),
+    logfile: join(_dirname, 'logs', 'converterlog.txt'),
 
     timetoGarbageCleaner: 240,
 
@@ -161,22 +158,19 @@ export default class CompilersHandler {
 
             const file = req.file
 
-            const cutConnection = () => {
-                if (typeof res == typeof Response)
-                    res.end();
-            }
+
 
             // Check if the file exists
             if (!file) {
                 this.log("No file been selected!", req, res);
-                cutConnection();
+                res.end();
                 return;
             };
 
             // check the file size
             if (file.size > this.filesizeLimitsMB * MB) {
                 this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, req, res)
-                cutConnection();
+                res.end();
                 return;
             }
 
@@ -251,9 +245,9 @@ export default class CompilersHandler {
         const newnameWT = `${name}.zip`;
 
         // defining paths
-        const uploadpath: string = Path.join(this.inputdir, nameWT);
-        const outputDirPath: string = Path.join(this.outputdir, name);
-        const downloadpath: string = Path.join(this.outputdir, newnameWT);
+        const uploadpath: string = join(this.inputdir, nameWT);
+        const outputDirPath: string = join(this.outputdir, name);
+        const downloadpath: string = join(this.outputdir, newnameWT);
         const URLFILE = `/files/${newnameWT}`;
 
 
@@ -340,11 +334,11 @@ export default class CompilersHandler {
 
         const name = getProps(FileNameWT).name;
 
-        const pathtoOutput = Path.join(this.outputdir, name);
-        const pathToInput = Path.join(this.inputdir, FileNameWT)
+        const pathtoOutput = join(this.outputdir, name);
+        const pathToInput = join(this.inputdir, FileNameWT)
 
 
-        const pathToInputWithType = `${Path.join(path, FileNameWT)}`
+        const pathToInputWithType = `${join(path, FileNameWT)}`
 
 
 
@@ -437,7 +431,7 @@ export default class CompilersHandler {
     /**  just a debugger and a messenger to the client if error*/
     log(errorMes: string, req?: Request, resOrToken?: any) {
         if (resOrToken)
-            if (typeof resOrToken == typeof Response) {
+            if (typeof resOrToken != typeof "") {
                 resOrToken.status(406).send({ message: errorMes })
                 resOrToken.end();
             } else {
@@ -469,10 +463,10 @@ export default class CompilersHandler {
         if (!fs.existsSync(dirin)) {
             fs.mkdirSync(dirin);
         }
+
         if (!fs.existsSync(dirout)) {
             fs.mkdirSync(dirout);
         }
-
     }
 
     /** get compiler by its name*/
@@ -488,10 +482,10 @@ export default class CompilersHandler {
                 if (err) throw err;
 
                 for (const file of files) {
-                    var stats = fs.statSync(Path.join(_dir, file));
+                    var stats = fs.statSync(join(_dir, file));
                     var mtime = stats.mtime;
                     if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * Minute) {
-                        fs.unlink(Path.join(_dir, file), (err: any) => {
+                        fs.unlink(join(_dir, file), (err: any) => {
                             if (err) console.error(err)
                         });
                     }
