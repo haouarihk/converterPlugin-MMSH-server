@@ -281,7 +281,7 @@ export default class CompilersHandler {
 
     /**depricated!! */
     setTextConverter() {
-        this.app.get('/textconverter', (req: Request, res: Response) => {
+        this.app.get('/textconverter', (_req: Request, res: Response) => {
             res.send(this.router.page("textconverter", { error: "", result: "" }));
         })
         this.app.post('/convert', async (req: Request, res: Response) => {
@@ -314,7 +314,7 @@ export default class CompilersHandler {
      * #{oPath}           
      * ->is the path for the output folder 
      * 
-     * //Costume
+     * //Costum
      * 
      * #{name.type}       
      * ->is the file name with type
@@ -436,6 +436,7 @@ export default class CompilersHandler {
                 resOrToken.end();
             } else {
                 this.router.newSocketMessage(resOrToken, "log", errorMes)
+                this.router.endSocketUser(resOrToken);
             }
 
 

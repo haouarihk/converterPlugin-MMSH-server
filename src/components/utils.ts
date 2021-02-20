@@ -26,11 +26,10 @@ export function deleteFile(filePath: string) {
 }
 
 
-export function deleteDirectory(dirPath: string) {
-    return new Promise((solve) => {
-        fs.rmdir(dirPath, { recursive: true }, solve)
+export function deleteDirectory(dirPath: string): Promise<void> {
+    return new Promise((s) => {
+        fs.rmdir(dirPath, { recursive: true }, () => s())
     })
-
 }
 
 export function deleteAllFilesInDirectory(dir: string) {
