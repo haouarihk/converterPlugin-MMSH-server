@@ -47,14 +47,15 @@ export function deleteDirectory(dirPath: string) {
 export function deleteAllFilesInDirectory(dir: string): Promise<void> {
     return new Promise((s, r) => {
         fs.readdir(dir, (err, files) => {
-            if (err) throw err;
+            if (err) r(err);
 
             for (const file of files) {
-                const pathi = join(dir, file)
-                if (!fs.statSync(pathi).isDirectory())
+                const pathi = join(dir, file);
+                if (!fs.statSync(pathi).isDirectory()) {
                     fs.unlink(pathi, err => {
                         if (err) r(err)
                     });
+                }
             }
 
             s()
