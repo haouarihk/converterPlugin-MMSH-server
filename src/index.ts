@@ -251,25 +251,28 @@ export default class CompilersHandler {
         const URLFILE = `/files/${newnameWT}`;
 
 
+        const errlog = (err: string) =>
+            this.log(err, req, token);
+
 
         /// doing the work using Await
         this.router.newSocketMessage(token, "log", "Compiling");
         // compiling 
-        await this.compileFile(token, nameWT, compileType);
+        await this.compileFile(token, nameWT, compileType).catch(errlog);
 
         // delete the input file
-        await deleteFile(uploadpath);
+        await deleteFile(uploadpath).catch(errlog);
 
         this.router.newSocketMessage(token, "log", "zipping the folder");
         // zip the output folder
-        await this.zipTheOutputDirectory(name)
+        await this.zipTheOutputDirectory(name).catch(errlog);
 
         // delete the the output folder
-        await deleteDirectory(outputDirPath);
+        await deleteDirectory(outputDirPath).catch(errlog);
 
         this.router.newSocketMessage(token, "log", "making a request");
         // making url for the file
-        await this.makeGetReqForTheFile(URLFILE, downloadpath);
+        await this.makeGetReqForTheFile(URLFILE, downloadpath).catch(errlog);
 
         // redirecting
         //res.redirect(URLFILE);
@@ -483,10 +486,13 @@ export default class CompilersHandler {
                 if (err) throw err;
 
                 for (const file of files) {
-                    var stats = fs.statSync(join(_dir, file));
-                    var mtime = stats.mtime;
+                    const _path = join(_dir, file)
+                    const stats = fs.statSync(_path);
+                    const mtime = stats.mtime;
                     if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * Minute) {
-                        fs.unlink(join(_dir, file), (err: any) => {
+                        if (stats.isDirectory())
+                            deleteDirectory(_path)
+                        else fs.unlink(_path, (err: any) => {
                             if (err) console.error(err)
                         });
                     }

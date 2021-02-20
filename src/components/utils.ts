@@ -17,39 +17,49 @@ export function getProps(name: string) {
 }
 
 // delete functions
-export function deleteFile(filePath: string) {
-    fs.unlink(filePath, (err) => {
-        if (err) {
-            console.log(err)
-        }
-    })
-}
-
-
-export function deleteDirectory(dirPath: string): Promise<void> {
-    return new Promise((s) => {
-        fs.rmdir(dirPath, { recursive: true }, () => s())
-    })
-}
-
-export function deleteAllFilesInDirectory(dir: string) {
-    fs.readdir(dir, (err, files) => {
-        if (err) throw err;
-
-        for (const file of files) {
-            try {
-                fs.unlink(join(dir, file), err => {
-                    if (err) throw err;
-                });
-            } catch {
-                try {
-                    deleteDirectory(join(dir, file))
-                } catch (err) {
-                    throw err
+export function deleteFile(filePath: string): Promise<void> {
+    return new Promise((s, r) => {
+        try {
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    r(err)
                 }
-            }
+                s()
+            })
+        } catch (err) {
+            r(err)
         }
-    });
+    })
+
+}
+
+
+export function deleteDirectory(dirPath: string) {
+    return new Promise((s, r) => {
+        try {
+            fs.rmdir(dirPath, s)
+        } catch (err) {
+            r(err)
+        }
+    })
+}
+
+export function deleteAllFilesInDirectory(dir: string): Promise<void> {
+    return new Promise((s, r) => {
+        fs.readdir(dir, (err, files) => {
+            if (err) throw err;
+
+            for (const file of files) {
+                const pathi = join(dir, file)
+                if (!fs.statSync(pathi).isDirectory())
+                    fs.unlink(pathi, err => {
+                        if (err) r(err)
+                    });
+            }
+
+            s()
+        });
+    })
 }
 
 
