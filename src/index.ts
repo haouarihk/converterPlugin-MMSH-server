@@ -444,13 +444,13 @@ export default class CompilersHandler {
 
 
         let ip = req ? req.ip ? req.ip : "" : ""
-        let msg = `[${Date.now()}] ${ip} ${errorMes}\n`
+        let msg = `[${Date.now()}] ${ip} ${errorMes}`
 
         if (this.debug)
             console.log(msg)
         if (this.logInFile) {
             let logfile = join(this.router.logdir, "log.txt")
-            fs.appendFile(logfile, msg,
+            fs.appendFile(logfile, msg + "\n",
                 (err: any) => {
                     if (err) console.warn(`[${Date.now()}] ${ip} Not Able to log into file because the file is not accesible ${logfile}`)
                 }); // => 
