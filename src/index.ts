@@ -113,7 +113,7 @@ export default class CompilersHandler {
             dest: this.inputdir
         }).single("file")
 
-        if (this.debug) this.log(this.alldir.maindir)
+        if (this.debug) this.log(`launching ${this.alldir.maindir} plugin`)
 
         this.app.set('trust proxy', true)
 
@@ -490,11 +490,10 @@ export default class CompilersHandler {
                     const stats = fs.statSync(_path);
                     const mtime = stats.mtime;
                     if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * Minute) {
-                        if (stats.isDirectory())
-                            deleteDirectory(_path)
-                        else fs.unlink(_path, (err: any) => {
-                            if (err) console.error(err)
-                        });
+                        if (!stats.isDirectory())
+                            fs.unlink(_path, (err: any) => {
+                                if (err) console.error(err)
+                            });
                     }
                 }
             });
