@@ -89,12 +89,12 @@ export default class CompilersHandler {
     }
 
     /** this function starts the server */
-    start() {
+    async start() {
         this.setInputOutputDir()
 
         // deleting garbage before start
         if (this.deleteallTempFilesOnStart) {
-            this.deleteGarbage()
+            await this.deleteGarbage()
         }
 
         //this.setTextConverter()
@@ -459,17 +459,19 @@ export default class CompilersHandler {
     }
 
     /** function to delete temp files off input and output folders*/
-    deleteGarbage() {
+    async deleteGarbage() {
         const dirin = this.inputdir
-        const dirout = this.outputdir
-        deleteAllFilesInDirectory(dirin);
-        deleteAllFilesInDirectory(dirout);
         if (!fs.existsSync(dirin)) {
             fs.mkdirSync(dirin);
+        } else {
+            await deleteAllFilesInDirectory(dirin);
         }
 
+        const dirout = this.outputdir
         if (!fs.existsSync(dirout)) {
             fs.mkdirSync(dirout);
+        } else {
+            await deleteAllFilesInDirectory(dirout);
         }
     }
 
