@@ -489,13 +489,16 @@ export default class CompilersHandler {
 
                 for (const file of files) {
                     const _path = join(_dir, file)
-                    const stats = fs.statSync(_path);
-                    const mtime = stats.mtime;
-                    if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * Minute) {
-                        if (!stats.isDirectory())
-                            fs.unlink(_path, (err: any) => {
-                                if (err) console.error(err)
-                            });
+                    let stats: any = fs.statSync(_path);
+                    if (stats.isDirectory()) {
+                        stats = null;
+                    } else {
+                        const mtime = stats.mtime;
+                        if (Number(new Date()) - Number(new Date(mtime)) >= this.timetoGarbageCleaner * Minute) {
+                            (async () => {
+                                await deleteFile(_path)
+                            })()
+                        }
                     }
                 }
             });
