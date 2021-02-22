@@ -250,7 +250,7 @@ export default class CompilersHandler {
         // definig the zip file output
         const zipfilename = nameprops.withType("zip");
         const zipFilePath: string = join(this.outputdir, zipfilename);
-        const urlLink = `/files/${zipfilename}`;
+        const urlLink = `./files/${generateRandomString()}/${zipfilename}`;
 
         // handling errors
         const errlog = (err: string) =>
@@ -420,8 +420,8 @@ export default class CompilersHandler {
     }
 
     // downloader
-    async makeGetReqForTheFile(urlfile: string, filepath: string) {
-        this.app.get(urlfile, (req: Request, res: Response) => {
+    async makeGetReqForTheFile(fileName: string, filepath: string) {
+        this.app.get(fileName, (req: Request, res: Response) => {
             if (!fs.existsSync(filepath)) {
                 res.send(this.log("sorry the file is no longer avaliable", req, res))
             }
