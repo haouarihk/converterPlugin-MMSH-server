@@ -7,14 +7,14 @@ import * as fs from "fs";
 
 import { path as _dirname } from "app-root-path";
 
-
+import { generate as generateRandomString } from "randomstring";
 
 // for types
 import { Compiler, converterOptions, Dirs, Router } from "../d/types";
 
 
 // for utils
-import { getNameOf, getProps, deleteFile, deleteAllFilesInDirectory, deleteDirectory } from "./components/utils";
+import { getNameOf, deleteFile, deleteAllFilesInDirectory, deleteDirectory, NamePro } from "./components/utils";
 
 // for filtering names
 import filter, { DefaultFilter } from "./components/filter";
@@ -27,7 +27,7 @@ import multerConfig from "./config/multer.config";
 
 // for archiving 
 import * as archiver from "archiver"
-import { generate } from "randomstring";
+
 
 //@ts-ignore
 import { aforSec } from "aforwait";
@@ -177,7 +177,7 @@ export default class CompilersHandler {
 
 
             // generate user token for the socket
-            const token = generate();
+            const token = generateRandomString();
             // make available token for a user to access
             this.router.newSocketUser(token)
             // send the token to the user
@@ -208,15 +208,15 @@ export default class CompilersHandler {
 
 
         // setting properties
-        const props = getProps(file.filename)
-        let name = props.name;
-        const nameWT = name + "." + props.type;
+        const nameprops = new NamePro(file.filename)
+        const originname = nameprops.name;
+
 
         // filter words in the name
-        if (this.filter.enabled)
-            name = await filter(name, this.filter)
+        await nameprops.filter(this.filter)
 
 
+        const nameWT = nameprops.withType();
 
         // get the right compiler
         const compiler = this.compilers[compileType]
@@ -229,7 +229,7 @@ export default class CompilersHandler {
 
         // check if the compiler can work with the file
         if (compiler.whitelistInputs[0]) {
-            if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(props.type.toUpperCase()) == -1) {
+            if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(nameprops.type.toUpperCase()) == -1) {
                 this.log(
 
                     `Not an acceptable file type by the compiler 
@@ -241,43 +241,48 @@ export default class CompilersHandler {
             }
         }
 
-        // definig the output name
-        const newnameWT = `${name}.zip`;
+
 
         // defining paths
-        const uploadpath: string = join(this.inputdir, nameWT);
-        const outputDirPath: string = join(this.outputdir, name);
-        const downloadpath: string = join(this.outputdir, newnameWT);
-        const URLFILE = `/files/${newnameWT}`;
+        const inputFilePath: string = join(this.inputdir, originname);
+        const outputDirPath: string = join(this.outputdir, nameprops.name);
 
 
+        // definig the zip file output
+        const zipfilename = nameprops.withType("zip");
+        const zipFilePath: string = join(this.outputdir, zipfilename);
+        const urlLink = `/files/${zipfilename}`;
+
+        // handling errors
         const errlog = (err: string) =>
             this.log(err, req, token);
 
 
-        /// doing the work using Await
+        // update the user
         this.router.newSocketMessage(token, "log", "Compiling");
+
         // compiling 
-        await this.compileFile(token, nameWT, compileType).catch(errlog);
+        await this.compileFile(token, nameprops, compileType).catch(errlog);
 
         // delete the input file
-        await deleteFile(uploadpath).catch(errlog);
+        await deleteFile(inputFilePath).catch(errlog);
 
+        // update the user
         this.router.newSocketMessage(token, "log", "zipping the folder");
+
         // zip the output folder
-        await this.zipTheOutputDirectory(name).catch(errlog);
+        await this.zipTheOutputDirectory(outputDirPath).catch(errlog);
 
         // delete the the output folder
         await deleteDirectory(outputDirPath).catch(errlog);
 
-        this.router.newSocketMessage(token, "log", "making a request");
         // making url for the file
-        await this.makeGetReqForTheFile(URLFILE, downloadpath).catch(errlog);
+        await this.makeGetReqForTheFile(urlLink, zipFilePath).catch(errlog);
 
         // redirecting
         //res.redirect(URLFILE);
         // socket way
-        this.router.newSocketMessage(token, "url", URLFILE);
+        this.router.newSocketMessage(token, "url", urlLink);
         this.router.endSocketUser(token);
     }
 
@@ -327,15 +332,15 @@ export default class CompilersHandler {
      * 
      * 
      */
-    Command(FileNameWT: string, compilerIndex: number): string {
+    Command(nameProps: NamePro, compilerIndex: number): string {
 
         const compiler = this.compilers[compilerIndex];
 
         const path = this.inputdir;
 
 
-
-        const name = getProps(FileNameWT).name;
+        const name = nameProps.name
+        const FileNameWT = nameProps.withType();
 
         const pathtoOutput = join(this.outputdir, name);
         const pathToInput = join(this.inputdir, FileNameWT)
@@ -367,9 +372,9 @@ export default class CompilersHandler {
 
 
     /** this function compiles a file*/
-    compileFile(token: string, FileNameWT: string, compileIndex: number) {
+    compileFile(token: string, nameprop: NamePro, compileIndex: number) {
 
-        const command = this.Command(FileNameWT, compileIndex);
+        const command = this.Command(nameprop, compileIndex);
         const compiler = this.compilers[compileIndex]
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
@@ -380,22 +385,17 @@ export default class CompilersHandler {
     }
 
 
-    async zipTheOutputDirectory(name: string) {
+    async zipTheOutputDirectory(path: string) {
         return new Promise((solve, reject) => {
-
-            // input directory
-            const output_dir = join(this.outputdir, name)
             // output file
-            const output = fs.createWriteStream(`${output_dir}.zip`);
+            const output = fs.createWriteStream(`${path}.zip`);
 
             // ziping technic
             const archive = archiver('zip');
 
             archive.pipe(output);
 
-            archive.directory(output_dir, false);
-
-
+            archive.directory(path, false);
 
             output.on('close', solve);
             archive.on('error', reject);

@@ -1,9 +1,12 @@
 import { join } from "path"
 import * as fs from "fs"
 
-import type { Compiler } from "../../d/types"
+import type { Compiler, FilterOps } from "../../d/types"
 
 import del = require('del');
+
+import filter from "./filter";
+import { generate as generateRandomString, GenerateOptions } from "randomstring";
 
 
 export function getNameOf(arry: Compiler[], name: string) {
@@ -17,13 +20,34 @@ export function getNameOf(arry: Compiler[], name: string) {
 }
 
 
-export function getProps(name: string) {
-    const n = name.split(".");
-    const n2 = name.split("");
-    const type: string = name.split(".")[n.length - 1]
-    const other: string = n2.slice(0, n2.length - type.length - 1).join('')
-    return { type, name: other }
+
+
+export class NamePro {
+    all: string;
+    type: string;
+    name: string;
+    constructor(string: string) {
+        this.all = string;
+
+        const n = this.all.split(".");
+        const n2 = this.all.split("");
+
+        this.type = this.all.split(".")[n.length - 1];
+        this.name = n2.slice(0, n2.length - this.type.length - 1).join('');
+    }
+    withType(_type: string = this.type) {
+        return `${this.name}.${_type}`
+    }
+    async filter(filterOptions: FilterOps) {
+        if (filterOptions.enabled)
+            this.name = await filter(this.name, filterOptions)
+    }
+    randomize(options?: number | GenerateOptions) {
+        this.name = `${this.name}_${generateRandomString(options)}`
+    }
+
 }
+
 
 
 
