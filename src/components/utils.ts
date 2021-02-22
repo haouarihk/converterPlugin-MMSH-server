@@ -3,7 +3,7 @@ import * as fs from "fs"
 
 import type { Compiler } from "../../d/types"
 
-
+const del = require('del');
 
 
 export function getNameOf(arry: Compiler[], name: string) {
@@ -48,18 +48,8 @@ export function deleteFile(filePath: string): Promise<void> {
 
 }
 
-export function deleteDirectory(dirPath: string): Promise<any> {
-    return new Promise((s, r) => {
-        try {
-            if (fs.statSync(dirPath).isDirectory()) {
-                fs.rmdir(dirPath, s)
-            } else {
-                r(`Trying to delete ${dirPath} as directory`)
-            }
-        } catch (err) {
-            r(err)
-        }
-    })
+export async function deleteDirectory(dirPath: string): Promise<any> {
+    await del(dirPath)
 }
 
 
