@@ -6,6 +6,15 @@ import type { Compiler } from "../../d/types"
 
 
 
+export function getNameOf(arry: Compiler[], name: string) {
+    let indexofar = -1;
+    arry.forEach((ar, i) => {
+        if (ar.name === name) {
+            indexofar = i;
+        }
+    });
+    return indexofar;
+}
 
 
 export function getProps(name: string) {
@@ -16,16 +25,22 @@ export function getProps(name: string) {
     return { type, name: other }
 }
 
+
+
+
+
 // delete functions
 export function deleteFile(filePath: string): Promise<void> {
     return new Promise((s, r) => {
         try {
-            fs.unlink(filePath, (err) => {
-                if (err) {
-                    r(err)
-                }
-                s()
-            })
+            if (!fs.statSync(filePath).isDirectory()) {
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        r(err)
+                    }
+                    s()
+                })
+            } else { r(`Trying to delete ${filePath} as file`) }
         } catch (err) {
             r(err)
         }
@@ -33,46 +48,38 @@ export function deleteFile(filePath: string): Promise<void> {
 
 }
 
-
-export function deleteDirectory(dirPath: string) {
+export function deleteDirectory(dirPath: string): Promise<any> {
     return new Promise((s, r) => {
         try {
-            fs.rmdir(dirPath, s)
+            if (fs.statSync(dirPath).isDirectory()) {
+                fs.rmdir(dirPath, s)
+            } else {
+                r(`Trying to delete ${dirPath} as directory`)
+            }
         } catch (err) {
             r(err)
         }
     })
 }
+
 
 export function deleteAllFilesInDirectory(dir: string): Promise<void> {
     return new Promise((s, r) => {
-        fs.readdir(dir, (err, files) => {
+        fs.readdir(dir, async (err, files) => {
             if (err) r(err);
-
             for (const file of files) {
                 const pathi = join(dir, file);
-                if (!fs.statSync(pathi).isDirectory()) {
-                    fs.unlink(pathi, err => {
-                        if (err) r(err)
-                    });
-                }
+                if (fs.statSync(pathi).isDirectory())
+                    await deleteDirectory(pathi);
+                else
+                    await deleteFile(pathi);
             }
-
             s()
         });
     })
 }
 
 
-export function getNameOf(arry: Compiler[], name: string) {
-    let indexofar = -1;
-    arry.forEach((ar, i) => {
-        if (ar.name === name) {
-            indexofar = i;
-        }
-    });
-    return indexofar;
-}
 
 
 
