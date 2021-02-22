@@ -3,7 +3,7 @@ import * as fs from "fs"
 
 import type { Compiler } from "../../d/types"
 
-const del = require('del');
+import del = require('del');
 
 
 export function getNameOf(arry: Compiler[], name: string) {
@@ -30,26 +30,12 @@ export function getProps(name: string) {
 
 
 // delete functions
-export function deleteFile(filePath: string): Promise<void> {
-    return new Promise((s, r) => {
-        try {
-            if (!fs.statSync(filePath).isDirectory()) {
-                fs.unlink(filePath, (err) => {
-                    if (err) {
-                        r(err)
-                    }
-                    s()
-                })
-            } else { r(`Trying to delete ${filePath} as file`) }
-        } catch (err) {
-            r(err)
-        }
-    })
-
+export async function deleteFile(filePath: string): Promise<void> {
+    await del(filePath, { force: true })
 }
 
 export async function deleteDirectory(dirPath: string): Promise<any> {
-    await del(dirPath)
+    await del(dirPath, { force: true })
 }
 
 
