@@ -22,7 +22,7 @@ export default function upload_file(props: upload_file_propies) {
         },
         filename: (req: Request<any, any, any, any, Record<string, any>>, file: any, cb: (error: Error | null, filename: string) => void) => {
             const fileprops = new NamePro(file.originalname)
-            fileprops.randomize();
+            fileprops.randomize(5);
             cb(null, `${fileprops.name}.${extension(file.mimetype)}`)
         }
     });

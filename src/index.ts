@@ -148,10 +148,9 @@ export default class CompilersHandler {
 
             // check for user verification
             const [stated, msg] = await this.router.reCaptchaCheck(userCaptchakey, req.ip)
-
-            if (!stated) {
-                this.log(msg, req, res);
-            }
+                .catch((err: string) => {
+                    this.log(err, req, res);
+                })
 
             this.log(msg)
 

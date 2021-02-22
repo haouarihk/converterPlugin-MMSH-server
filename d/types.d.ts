@@ -75,7 +75,7 @@ export interface Router {
     path: (name: string) => string;
 
     /** check  this user with google recaptcha  */
-    reCaptchaCheck: (UserToken: string, ip: string) => [stated: boolean, msg: string];
+    reCaptchaCheck: (UserToken: string, ip: string) => any;
 
     /** Send message on progress page */
     newSocketMessage: (token: string, event: string, message: any) => void;
