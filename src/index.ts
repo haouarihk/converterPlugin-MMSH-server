@@ -143,7 +143,7 @@ export default class CompilersHandler {
             // check for captcha abuse
             if (userCaptchakey === undefined || userCaptchakey === '' || userCaptchakey === null) {
 
-                this.log("rickrolled, you tried to abuse the system huh?", req, res);
+                this.error("rickrolled, you tried to abuse the system huh?", req, res);
             }
 
             // check for user verification
@@ -161,14 +161,14 @@ export default class CompilersHandler {
 
             // Check if the file exists
             if (!file) {
-                this.log("No file been selected!", req, res);
+                this.error("No file been selected!", req, res);
                 res.end();
                 return;
             };
 
             // check the file size
             if (file.size > this.filesizeLimitsMB * MB) {
-                this.log(`The file is larger than ${this.filesizeLimitsMB}MB`, req, res)
+                this.error(`The file is larger than ${this.filesizeLimitsMB}MB`, req, res)
                 res.end();
                 return;
             }
@@ -201,7 +201,7 @@ export default class CompilersHandler {
 
         // check if a compile is been selected
         if (compileType == undefined) {
-            this.log("No compiler has been selected!", req, token);
+            this.error("No compiler has been selected!", req, token);
             return;
         }
 
@@ -222,15 +222,14 @@ export default class CompilersHandler {
 
         // Check if the compiler actually there
         if (!compiler) {
-            this.log(`the compiler ${compileType} doesn't exists`, req, token);
+            this.error(`the compiler ${compileType} doesn't exists`, req, token);
             return;
         }
 
         // check if the compiler can work with the file
         if (compiler.whitelistInputs[0]) {
             if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(nameprops.type.toUpperCase()) == -1) {
-                this.log(
-
+                this.error(
                     `Not an acceptable file type by the compiler 
                     ${compiler.name}\n it only accepts 
                     [${compiler.whitelistInputs.join(`,`)}]`
@@ -423,21 +422,23 @@ export default class CompilersHandler {
     async makeGetReqForTheFile(urlLink: string, filepath: string) {
         this.app.get(`/${this.alldir.maindir}/${urlLink}`, (req: Request, res: Response) => {
             if (!fs.existsSync(filepath)) {
-                res.send(this.log("sorry the file is no longer avaliable", req, res))
+                res.send(this.error("sorry the file is no longer avaliable", req, res))
             }
             res.download(filepath);
         })
         Promise.resolve()
     }
 
-    /**  just a debugger and a messenger to the client if error*/
-    log(errorMes: string, req?: Request, resOrToken?: any) {
+
+
+    // make logs of the errors and other stuff for debuging.
+    private logger(type: string, errorMes: string, req?: Request, resOrToken?: any) {
         if (resOrToken)
             if (typeof resOrToken != typeof "") {
                 resOrToken.status(406).send({ message: errorMes })
                 resOrToken.end();
             } else {
-                this.router.newSocketMessage(resOrToken, "log", errorMes)
+                this.router.newSocketMessage(resOrToken, type, errorMes)
                 this.router.endSocketUser(resOrToken);
             }
 
@@ -448,7 +449,7 @@ export default class CompilersHandler {
         if (this.debug)
             console.log(msg)
         if (this.logInFile) {
-            let logfile = join(this.router.logdir, "log.txt")
+            let logfile = join(this.router.logdir, type + ".txt")
             fs.appendFile(logfile, msg + "\n",
                 (err: any) => {
                     if (err) console.warn(`[${Date.now()}] ${ip} Not Able to log into file because the file is not accesible ${logfile}`)
@@ -456,6 +457,18 @@ export default class CompilersHandler {
         }
 
     }
+
+    /**  just a debugger and a messenger to the client if error*/
+    log(errorMes: string, req?: Request, resOrToken?: any) {
+        return this.logger("log", errorMes, req, resOrToken)
+    }
+
+    /**  just a debugger and a messenger to the client if error*/
+    error(errorMes: string, req?: Request, resOrToken?: any) {
+        return this.logger("err", errorMes, req, resOrToken)
+    }
+
+
 
     /** function to delete temp files off input and output folders*/
     async deleteGarbage() {
