@@ -80,6 +80,15 @@ export function deleteAllFilesInDirectory(dir: string): Promise<void> {
     })
 }
 
+export function createDir(path: string): Promise<void> {
+    return new Promise((s, r) => {
+        if (!fs.existsSync(path)) {
+            fs.mkdirSync(path);
+        }
+        s()
+
+    })
+}
 
 
 

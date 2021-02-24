@@ -19,6 +19,7 @@ export interface Compiler {
     CompilerPath: string;
     command: string;
     outputT: string;
+    buildOutputDirectory: boolean;
     whitelistInputs: string[];
 }
 

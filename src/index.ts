@@ -14,7 +14,7 @@ import { Compiler, converterOptions, Dirs, Router } from "../d/types";
 
 
 // for utils
-import { getNameOf, deleteFile, deleteAllFilesInDirectory, deleteDirectory, NamePro } from "./components/utils";
+import { getNameOf, deleteFile, deleteAllFilesInDirectory, deleteDirectory, NamePro, createDir } from "./components/utils";
 
 // for filtering names
 import filter, { DefaultFilter } from "./components/filter";
@@ -39,6 +39,7 @@ const defaultProps = {
             commander: "python",
             CompilerPath: `./compilers/compiler1/compiler.py`,
             command: `-o "#{CompeleteOutputFilePath}" -i "#{CompeleteInputFilePath}"`,
+            buildOutputDirectory: true,
             whitelistInputs: ["Doc", "Docx"]
         },
     ],
@@ -259,6 +260,8 @@ export default class CompilersHandler {
         // update the user
         this.router.newSocketMessage(token, "log", "Compiling");
 
+
+
         // compiling 
         await this.compileFile(token, nameprops, compileType).catch(errlog);
 
@@ -330,7 +333,7 @@ export default class CompilersHandler {
      * 
      * 
      */
-    Command(nameProps: NamePro, compilerIndex: number): string {
+    async Command(nameProps: NamePro, compilerIndex: number): Promise<string> {
 
         const compiler = this.compilers[compilerIndex];
 
@@ -346,7 +349,8 @@ export default class CompilersHandler {
 
         const pathToInputWithType = `${join(path, FileNameWT)}`
 
-
+        if (compiler.buildOutputDirectory)
+            await createDir(pathtoOutput)
 
 
         // Main
@@ -370,9 +374,9 @@ export default class CompilersHandler {
 
 
     /** this function compiles a file*/
-    compileFile(token: string, nameprop: NamePro, compileIndex: number) {
+    async compileFile(token: string, nameprop: NamePro, compileIndex: number) {
 
-        const command = this.Command(nameprop, compileIndex);
+        const command = await this.Command(nameprop, compileIndex);
         const compiler = this.compilers[compileIndex]
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
