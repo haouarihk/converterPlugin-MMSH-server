@@ -153,6 +153,11 @@ export default class CompilersHandler {
                     this.log(err, req, res);
                 })
 
+            if (!stated) {
+                this.log(msg, req, res);
+                return
+            }
+
             this.log(msg)
 
 
