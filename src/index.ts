@@ -1,5 +1,6 @@
 // for running commands
 import { exec } from "child_process";
+import fetch from "node-fetch"
 
 
 // for file controling
@@ -17,7 +18,7 @@ import { Compiler, converterOptions, Dirs, Router } from "../d/types";
 import { getNameOf, deleteFile, deleteAllFilesInDirectory, deleteDirectory, NamePro, createDir } from "./components/utils";
 
 // for filtering names
-import filter, { DefaultFilter } from "./components/filter";
+import { DefaultFilter } from "./components/filter";
 import { join } from 'path';
 import { Request, Response } from "express";
 import multerConfig from "./config/multer.config";
@@ -385,6 +386,13 @@ export default class CompilersHandler {
         const compiler = this.compilers[compileIndex]
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
+        if (compiler.CompilerLink) {
+            return this.requestCompiler(compiler.CompilerLink, `${compiler.commander} "${compilerPath}" ${command}`, (stdout: string) => {
+                // socket.io sending logs to the user on the proccess
+                this.router.newSocketMessage(token, "log", stdout)
+            })
+        }
+
         return this.execShellCommand(`${compiler.commander} "${compilerPath}" ${command}`, (stdout: string) => {
             // socket.io sending logs to the user on the proccess
             this.router.newSocketMessage(token, "log", stdout)
@@ -425,6 +433,13 @@ export default class CompilersHandler {
         return new Promise((resolve) => {
             execi.on('exit', resolve);
         });
+    }
+
+    /** make a request to one of the compilers */
+    async requestCompiler(cCompilerLink: string, cmd: string, stdcb: Function) {
+        let data = await fetch(cCompilerLink, { method: 'GET', body: JSON.stringify({ cmd }) })
+        stdcb(data)
+        return data
     }
 
     // downloader
@@ -531,11 +546,8 @@ export default class CompilersHandler {
      * directory
      */
     setInputOutputDir() {
-        let inputdir = this.router.path('inputdir');
-        let outputdir = this.router.path('outputdir')
-
-        this.inputdir = inputdir;
-        this.outputdir = outputdir;
+        this.inputdir = this.router.path('inputdir');
+        this.outputdir = this.router.path('outputdir');
     }
 
     /** for not specifying all object parameters under constructor and safe lines of code*/

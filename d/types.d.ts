@@ -17,6 +17,7 @@ export interface Compiler {
     name: string;
     commander: string;
     CompilerPath: string;
+    CompilerLink?: string;
     command: string;
     outputT: string;
     buildOutputDirectory: boolean;
