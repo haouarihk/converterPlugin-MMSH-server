@@ -437,7 +437,7 @@ export default class CompilersHandler {
 
     /** make a request to one of the compilers */
     async requestCompiler(cCompilerLink: string, cmd: string, stdcb: Function) {
-        let data = await fetch(cCompilerLink, { method: 'GET', body: JSON.stringify({ cmd }) })
+        let data = await fetch(cCompilerLink, { method: 'POST', body: JSON.stringify({ cmd }) })
         stdcb(data)
         return data
     }
