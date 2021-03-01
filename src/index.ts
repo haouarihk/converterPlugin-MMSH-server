@@ -128,7 +128,7 @@ export default class CompilersHandler {
     /**main page */
     async mainPage(req: Request, res: Response) {
         // log a user visit
-        this.log(`visited`, req)
+        //this.log(`visited`, req)
 
         this.router.setPage(res, "main",
             {
