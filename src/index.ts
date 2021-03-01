@@ -41,7 +41,7 @@ const defaultProps = {
             CompilerPath: `./compilers/compiler1/compiler.py`,
             command: `-o "#{CompeleteOutputFilePath}" -i "#{CompeleteInputFilePath}"`,
             buildOutputDirectory: true,
-            whitelistInputs: ["Doc", "Docx"]
+            accept: ["Doc", "Docx"]
         },
     ],
 
@@ -221,9 +221,6 @@ export default class CompilersHandler {
         // filter words in the name
         await nameprops.filter(this.filter)
 
-
-        const nameWT = nameprops.withType();
-
         // get the right compiler
         const compiler = this.compilers[compileType]
 
@@ -234,12 +231,12 @@ export default class CompilersHandler {
         }
 
         // check if the compiler can work with the file
-        if (compiler.whitelistInputs[0]) {
-            if (compiler.whitelistInputs.length > 0 && compiler.whitelistInputs.map(a => a.toUpperCase()).indexOf(nameprops.type.toUpperCase()) == -1) {
+        if (compiler.accept[0]) {
+            if (compiler.accept.length > 0 && compiler.accept.map(a => a.toUpperCase()).indexOf(nameprops.type.toUpperCase()) == -1) {
                 this.error(
                     `Not an acceptable file type by the compiler 
                     ${compiler.name}\n it only accepts 
-                    [${compiler.whitelistInputs.join(`,`)}]`
+                    [${compiler.accept.join(`,`)}]`
 
                     , req, token)
                 return;
@@ -387,7 +384,7 @@ export default class CompilersHandler {
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
         if (compiler.CompilerLink) {
-            return this.requestCompiler(compiler.CompilerLink, `${compiler.commander} "${compilerPath}" ${command}`, (stdout: string) => {
+            return await this.requestCompiler(compiler.CompilerLink, `${compiler.commander} "${compilerPath}" ${command}`, (stdout: string) => {
                 // socket.io sending logs to the user on the proccess
                 this.router.newSocketMessage(token, "log", stdout)
             })

@@ -21,7 +21,7 @@ export interface Compiler {
     command: string;
     outputT: string;
     buildOutputDirectory: boolean;
-    whitelistInputs: string[];
+    accept: string[];
 }
 
 export interface Plugin {
