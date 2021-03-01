@@ -200,7 +200,10 @@ export default class CompilersHandler {
 
     }
 
-
+    /** This function handles converting steps
+     * @param token the user socket token
+     * @param req the user request
+     */
     async convert(token: string, req: Request) {
         const compileType: number = req.body.type;
         const file = req.file
@@ -376,7 +379,12 @@ export default class CompilersHandler {
     }
 
 
-    /** this function compiles a file*/
+    /** this function compiles a file
+     * 
+     * @param token user token from the socket
+     * @param nameprop name using {NamePro} class
+     * @param compileIndex index of the compiler that's been used
+     */
     async compileFile(token: string, nameprop: NamePro, compileIndex: number) {
 
         const command = await this.Command(nameprop, compileIndex);
@@ -396,7 +404,9 @@ export default class CompilersHandler {
         })
     }
 
-
+    /** This function compress a directory
+     * @param path path for the directory
+     */
     async zipTheOutputDirectory(path: string) {
         return new Promise((solve, reject) => {
             // output file
@@ -416,7 +426,12 @@ export default class CompilersHandler {
     }
 
 
-    /** this function exicute a programmer with params */
+
+    /** this function execute a programme with params
+     * 
+     * @param cmd the comamnd that runs the server
+     * @param stdcb a callback function that handles stdouts
+     */
     execShellCommand(cmd: string, stdcb: Function) {
         const execi = exec(cmd, (error, stdout, stderr) => {
             if (error)
@@ -432,27 +447,45 @@ export default class CompilersHandler {
         });
     }
 
-    /** make a request to one of the compilers */
-    async requestCompiler(cCompilerLink: string, cmd: string, stdcb: Function) {
-        let data = await fetch(cCompilerLink, { method: 'POST', body: JSON.stringify({ cmd }) })
+    /** Request compiling a file from a compiler.
+     * @param CompilerLink link for the compiler api
+     * @param cmd the comamnd that runs the server
+     * @param stdcb a callback function that handles stdouts
+     */
+    async requestCompiler(CompilerLink: string, cmd: string, stdcb: Function) {
+        let data = await fetch(CompilerLink, {
+            method: 'POST',
+            body: JSON.stringify({ cmd }),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(res => res.text())
         stdcb(data)
         return data
     }
 
-    // downloader
-    async makeGetReqForTheFile(urlLink: string, filepath: string) {
+    /** Make a download link for the file
+     * 
+     * @param urlLink link for the file after sublink
+     * @param filepath path for the file
+     */
+    async makeGetReqForTheFile(urlLink: string, filepath: string): Promise<any> {
         this.app.get(`/${this.alldir.maindir}/${urlLink}`, (req: Request, res: Response) => {
             if (!fs.existsSync(filepath)) {
                 res.send(this.error("sorry the file is no longer avaliable", req, res))
             }
             res.download(filepath);
         })
-        Promise.resolve()
+        return null
     }
 
 
 
-    // make logs of the errors and other stuff for debuging.
+
+    /** make logs of the errors and other stuff for debuging.
+     * @param type type of the message
+     * @param errorMes the error message
+     * @param req the request to get the ip adress
+     * @param resOrToken respawns to send or token to send using socket.
+     */
     private logger(type: string, errorMes: string, req?: Request, resOrToken?: any) {
         if (resOrToken)
             if (typeof resOrToken != typeof "") {
@@ -479,12 +512,21 @@ export default class CompilersHandler {
 
     }
 
-    /**  just a debugger and a messenger to the client if error*/
-    log(errorMes: string, req?: Request, resOrToken?: any) {
-        return this.logger("log", errorMes, req, resOrToken)
+
+    /** just a debugger and a messenger to the client if log
+     * @param logMes the error message
+     * @param req the request to get the ip adress
+     * @param resOrToken respawns to send or token to send using socket.
+     */
+    log(logMes: string, req?: Request, resOrToken?: any) {
+        return this.logger("log", logMes, req, resOrToken)
     }
 
-    /**  just a debugger and a messenger to the client if error*/
+    /** just a debugger and a messenger to the client if error
+     * @param errorMes the error message
+     * @param req the request to get the ip adress
+     * @param resOrToken respawns to send or token to send using socket.
+     */
     error(errorMes: string, req?: Request, resOrToken?: any) {
         return this.logger("err", errorMes, req, resOrToken)
     }
