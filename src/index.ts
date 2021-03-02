@@ -424,10 +424,6 @@ export default class CompilersHandler {
 
             let file: fileData = await this.requestCompiler(compiler.CompilerLink, reqData);
 
-            // socket.io sending logs
-            this.router.newSocketMessage(token, "log", file.logs)
-
-
             const inter: NodeJS.Timeout = setTimeout(reject, 3e+7)
 
             // set a listener for file finishing
