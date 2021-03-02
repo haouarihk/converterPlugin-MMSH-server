@@ -1,5 +1,6 @@
 
-import type { Express, Response } from "express"
+import type { Express, Request, Response } from "express"
+import { NamePro } from "../src/components/utils";
 
 
 export interface converterOptions {
@@ -105,3 +106,33 @@ export interface Router {
 }
 
 
+export interface fileData {
+    id: string;
+    finished: boolean;
+    logs: string;
+}
+
+export interface ReqestData {
+    cmd: string;
+    name: string;
+    callback: string;
+}
+
+
+export namespace Props {
+    interface compileWithLink {
+        req: Request;
+        token: string;
+        nameprop: NamePro;
+        compiler: Compiler;
+        cmd: string;
+    }
+
+    interface compileFile {
+        req: Request;
+        token: string;
+        nameprops: NamePro;
+        compileIndex: number;
+    }
+
+}

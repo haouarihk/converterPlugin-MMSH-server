@@ -11,7 +11,7 @@ import { path as _dirname } from "app-root-path";
 import { generate as generateRandomString } from "randomstring";
 
 // for types
-import { Compiler, converterOptions, Dirs, Router } from "../d/types";
+import { Compiler, converterOptions, Dirs, fileData, Props, ReqestData, Router } from "../d/types";
 
 
 // for utils
@@ -205,12 +205,12 @@ export default class CompilersHandler {
      * @param req the user request
      */
     async convert(token: string, req: Request) {
-        const compileType: number = req.body.type;
+        const compileIndex: number = req.body.type;
         const file = req.file
 
 
         // check if a compile is been selected
-        if (compileType == undefined) {
+        if (compileIndex == undefined) {
             this.error("No compiler has been selected!", req, token);
             return;
         }
@@ -225,11 +225,11 @@ export default class CompilersHandler {
         await nameprops.filter(this.filter)
 
         // get the right compiler
-        const compiler = this.compilers[compileType]
+        const compiler = this.compilers[compileIndex]
 
         // Check if the compiler actually there
         if (!compiler) {
-            this.error(`the compiler ${compileType} doesn't exists`, req, token);
+            this.error(`the compiler ${compileIndex} doesn't exists`, req, token);
             return;
         }
 
@@ -267,9 +267,9 @@ export default class CompilersHandler {
         this.router.newSocketMessage(token, "log", "Compiling");
 
 
-
         // compiling 
-        await this.compileFile(token, nameprops, compileType).catch(errlog);
+        await this.compileFile({ req, token, nameprops, compileIndex }).catch(errlog);
+
 
         // delete the input file
         await deleteFile(inputFilePath).catch(errlog);
@@ -385,22 +385,45 @@ export default class CompilersHandler {
      * @param nameprop name using {NamePro} class
      * @param compileIndex index of the compiler that's been used
      */
-    async compileFile(token: string, nameprop: NamePro, compileIndex: number) {
+    async compileFile({ req, token, nameprops, compileIndex }: Props.compileFile) {
 
-        const command = await this.Command(nameprop, compileIndex);
+        const command = await this.Command(nameprops, compileIndex);
         const compiler = this.compilers[compileIndex]
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
+        const cmd = `${compiler.commander} "${compilerPath}" ${command}`
         if (compiler.CompilerLink) {
-            return await this.requestCompiler(compiler.CompilerLink, `${compiler.commander} "${compilerPath}" ${command}`, (stdout: string) => {
-                // socket.io sending logs to the user on the proccess
-                this.router.newSocketMessage(token, "log", stdout)
-            })
+            return this.compileWithLink({ req, token, nameprop: nameprops, compiler, cmd })
         }
 
-        return this.execShellCommand(`${compiler.commander} "${compilerPath}" ${command}`, (stdout: string) => {
+        return this.execShellCommand(cmd, (stdout: string) => {
             // socket.io sending logs to the user on the proccess
             this.router.newSocketMessage(token, "log", stdout)
+        })
+    }
+
+    compileWithLink(props: Props.compileWithLink) {
+        const { req, token, nameprop, compiler, cmd } = props;
+
+        return new Promise(async (solve, reject) => {
+            const href: string = `${req.protocol}://${req.get('host')}`;
+
+            const callback: string = `/${this.alldir.maindir}/cb/${nameprop.name}`;
+            const reqData: ReqestData = { cmd, name: nameprop.name, callback: href + callback };
+
+            let file: fileData = await this.requestCompiler(compiler.CompilerLink, reqData);
+
+            // socket.io sending logs
+            this.router.newSocketMessage(token, "log", file.logs)
+
+
+            const inter: NodeJS.Timeout = setTimeout(reject, 3e+7)
+            // set a listener for file finishing
+            this.app.post(callback, (req: Request) => {
+                clearTimeout(inter)
+                solve(req.body.file)
+            })
+
         })
     }
 
@@ -449,17 +472,14 @@ export default class CompilersHandler {
 
     /** Request compiling a file from a compiler.
      * @param CompilerLink link for the compiler api
-     * @param cmd the comamnd that runs the server
-     * @param stdcb a callback function that handles stdouts
+     * @param data requestData
      */
-    async requestCompiler(CompilerLink: string, cmd: string, stdcb: Function) {
-        let data = await fetch(CompilerLink, {
+    async requestCompiler(CompilerLink: string, data: ReqestData) {
+        return await fetch(CompilerLink, {
             method: 'POST',
-            body: JSON.stringify({ cmd }),
+            body: JSON.stringify(data),
             headers: { 'Content-Type': 'application/json' }
-        }).then(res => res.text())
-        stdcb(data)
-        return data
+        }).then(res => res.json())
     }
 
     /** Make a download link for the file
