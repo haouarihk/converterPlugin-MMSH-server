@@ -83,13 +83,16 @@ export function deleteAllFilesInDirectory(dir: string): Promise<void> {
 export function createDir(path: string): Promise<void> {
     return new Promise((s, r) => {
         if (!fs.existsSync(path)) {
-            fs.mkdirSync(path);
+            fs.mkdirSync(path, { recursive: true });
         }
         s()
-
     })
 }
 
+
+export const spacePutter = (str: string) => {
+    return str == "" ? "" : `${str} `
+}
 
 
 

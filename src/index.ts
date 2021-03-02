@@ -15,13 +15,15 @@ import { Compiler, converterOptions, Dirs, fileData, Props, ReqestData, Router }
 
 
 // for utils
-import { getNameOf, deleteFile, deleteAllFilesInDirectory, deleteDirectory, NamePro, createDir } from "./components/utils";
+import { getNameOf, deleteFile, deleteAllFilesInDirectory, deleteDirectory, NamePro, createDir, spacePutter } from "./components/utils";
 
 // for filtering names
 import { DefaultFilter } from "./components/filter";
 import { join } from 'path';
-import { Request, Response } from "express";
+import { Request, Response, } from "express";
 import multerConfig from "./config/multer.config";
+
+import * as bodyparser from "body-parser"
 
 
 
@@ -343,17 +345,20 @@ export default class CompilersHandler {
 
         const compiler = this.compilers[compilerIndex];
 
-        const path = this.inputdir;
-
+        const ipath = this.inputdir;
+        const opath = this.outputdir;
 
         const name = nameProps.name
         const FileNameWT = nameProps.withType();
 
-        const pathtoOutput = join(this.outputdir, name);
-        const pathToInput = join(this.inputdir, FileNameWT)
+        const oNameWT = nameProps.withType(compiler.outputT);
+
+        const pathToInput = join(ipath, FileNameWT);
+        const pathtoOutput = join(opath, name);
 
 
-        const pathToInputWithType = `${join(path, FileNameWT)}`
+        const pathToInputWithType = `${join(ipath, FileNameWT)}`
+        const pathToOutputWithType = `${join(opath, name, FileNameWT)}`
 
         if (compiler.buildOutputDirectory)
             await createDir(pathtoOutput)
@@ -369,8 +374,11 @@ export default class CompilersHandler {
         // costume 
         compilerCommand = compilerCommand.replace(/#{iPath.type}/gi, pathToInputWithType)
 
+        compilerCommand = compilerCommand.replace(/#{oPath\/name.type}/gi, pathToOutputWithType)
 
         compilerCommand = compilerCommand.replace(/#{name}/gi, name)
+
+        compilerCommand = compilerCommand.replace(/#{oname.type}/gi, oNameWT)
 
         compilerCommand = compilerCommand.replace(/#{name.type}/gi, FileNameWT)
 
@@ -391,9 +399,12 @@ export default class CompilersHandler {
         const compiler = this.compilers[compileIndex]
         let compilerPath = join(this.router.path("main"), compiler.CompilerPath)
 
-        const cmd = `${compiler.commander} "${compilerPath}" ${command}`
+
+
+        const cmd = spacePutter(compiler.commander) + spacePutter(compilerPath) + spacePutter(command);
+
         if (compiler.CompilerLink) {
-            return this.compileWithLink({ req, token, nameprop: nameprops, compiler, cmd })
+            return await this.compileWithLink({ req, token, nameprop: nameprops, compiler, cmd })
         }
 
         return this.execShellCommand(cmd, (stdout: string) => {
@@ -418,10 +429,13 @@ export default class CompilersHandler {
 
 
             const inter: NodeJS.Timeout = setTimeout(reject, 3e+7)
+
             // set a listener for file finishing
-            this.app.post(callback, (req: Request) => {
+            this.app.post(callback, bodyparser.json(), (_req: Request, _res: Response) => {
                 clearTimeout(inter)
-                solve(req.body.file)
+                file = _req.body.file;
+                solve(file)
+                _res.status(200).end();
             })
 
         })
