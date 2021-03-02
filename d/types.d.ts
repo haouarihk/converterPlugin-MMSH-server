@@ -123,7 +123,7 @@ export namespace Props {
     interface compileWithLink {
         req: Request;
         token: string;
-        nameprop: NamePro;
+        nameprops: NamePro;
         compiler: Compiler;
         cmd: string;
     }

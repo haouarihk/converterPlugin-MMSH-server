@@ -88,6 +88,8 @@ export default class CompilersHandler {
     debug: any;
     logInFile: any;
 
+    href: string;
+
     constructor(props: converterOptions | object = {}) {
         this.getParams({ ...defaultProps, ...props })
     }
@@ -404,7 +406,7 @@ export default class CompilersHandler {
         const cmd = spacePutter(compiler.commander) + spacePutter(compilerPath) + spacePutter(command);
 
         if (compiler.CompilerLink) {
-            return await this.compileWithLink({ req, token, nameprop: nameprops, compiler, cmd })
+            return await this.compileWithLink({ req, token, nameprops, compiler, cmd })
         }
 
         return this.execShellCommand(cmd, (stdout: string) => {
@@ -414,13 +416,11 @@ export default class CompilersHandler {
     }
 
     compileWithLink(props: Props.compileWithLink) {
-        const { req, token, nameprop, compiler, cmd } = props;
+        const { req, token, nameprops, compiler, cmd } = props;
 
         return new Promise(async (solve, reject) => {
-            const href: string = `${req.protocol}://${req.get('host')}`;
-
-            const callback: string = `/${this.alldir.maindir}/cb/${nameprop.name}`;
-            const reqData: ReqestData = { cmd, name: nameprop.name, callback: href + callback };
+            const callback: string = `/${this.alldir.maindir}/cb/${nameprops.name}`;
+            const reqData: ReqestData = { cmd, name: nameprops.name, callback: this.href + callback };
 
             let file: fileData = await this.requestCompiler(compiler.CompilerLink, reqData);
 
