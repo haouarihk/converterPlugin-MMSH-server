@@ -22,7 +22,7 @@ export const DefaultFilter: FilterOps = {
 
     filterComas: true,
 
-    filterUsingEncoder: true,
+    filterUsingEncoder: false,
 
     filterSlashes: true,
 
