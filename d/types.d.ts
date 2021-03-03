@@ -1,5 +1,5 @@
 
-import type { Express, Request, Response } from "express"
+import type { Express, Response } from "express"
 import { NamePro } from "../src/components/utils";
 
 
@@ -44,7 +44,9 @@ export interface FilterOps {
 
     filterSlashes: boolean;
 
-    filterUsingDecoder: boolean;
+    filterSpaces: boolean;
+
+    filterUsingEncoder: boolean;
 }
 
 

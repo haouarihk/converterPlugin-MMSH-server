@@ -22,9 +22,11 @@ export const DefaultFilter: FilterOps = {
 
     filterComas: true,
 
+    filterUsingEncoder: true,
+
     filterSlashes: true,
 
-    filterUsingDecoder: true,
+    filterSpaces: true,
 
     replaceBy: "u",
 }
@@ -34,9 +36,11 @@ export default async (string: string, filter: FilterOps) => {
     let _string: string = string;
 
     _string = (_filter.filterWords) ? await layer1(_string, _filter) : _string;
-    _string = (_filter.filterWords) ? await layer2(_string, _filter) : _string;
-    _string = (_filter.filterWords) ? await layer3(_string) : _string;
-    _string = (_filter.filterWords) ? await layer4(_string, _filter) : _string;
+    _string = (_filter.filterComas) ? await layer2(_string, _filter) : _string;
+    _string = (_filter.filterUsingEncoder) ? await layer3(_string) : _string;
+    _string = (_filter.filterSlashes) ? await layer4(_string, _filter) : _string;
+    _string = (_filter.filterSpaces) ? await layer5(_string, _filter) : _string;
+
 
     return _string
 }
@@ -77,6 +81,15 @@ function layer4(str: string, filter: FilterOps): Promise<string> {
     return new Promise((solve) => {
         let _str = str.replace(/\\/gi, filter.replaceBy)
         _str = _str.replace(/\//gi, filter.replaceBy)
+        solve(_str);
+        return _str
+    })
+}
+
+/** Filtering spaces out */
+function layer5(str: string, filter: FilterOps): Promise<string> {
+    return new Promise((solve) => {
+        let _str = str.replace(/ /gi, filter.replaceBy)
         solve(_str);
         return _str
     })
