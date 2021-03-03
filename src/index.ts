@@ -117,7 +117,7 @@ export default class CompilersHandler {
             randomStringSize: this.randomStringSize,
             fileSize: this.filesizeLimitsMB,
             dest: this.inputdir
-        }).single("file")
+        }, this.filter).single("file")
 
         if (this.debug) this.log(`launching ${this.alldir.maindir} plugin`)
 
@@ -222,11 +222,6 @@ export default class CompilersHandler {
 
         // setting properties
         const nameprops = new NamePro(file.filename)
-        const originname = nameprops.name;
-
-
-        // filter words in the name
-        await nameprops.filter(this.filter)
 
         // get the right compiler
         const compiler = this.compilers[compileIndex]
@@ -253,7 +248,7 @@ export default class CompilersHandler {
 
 
         // defining paths
-        const inputFilePath: string = join(this.inputdir, originname);
+        const inputFilePath: string = join(this.inputdir, nameprops.name);
         const outputDirPath: string = join(this.outputdir, nameprops.name);
 
 

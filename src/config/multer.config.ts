@@ -5,6 +5,7 @@ import { extension } from "mime-types"
 
 import { Request } from "express";
 import { NamePro } from "../components/utils";
+import { FilterOps } from "../../d/types";
 
 let MB = 1024 * 1024;
 
@@ -15,7 +16,7 @@ interface upload_file_propies {
     additions?: any;
 }
 
-export default function upload_file(props: upload_file_propies) {
+export default function upload_file(props: upload_file_propies, filter: FilterOps) {
     var storage = multer.diskStorage({
         destination: (req: Request<any, any, any, any, Record<string, any>>, file: any, cb: (error: Error | null, filename: string) => void) => {
             cb(null, props.dest)
@@ -24,6 +25,7 @@ export default function upload_file(props: upload_file_propies) {
             const fileprops = new NamePro(file.originalname)
             fileprops.randomize(props.randomStringSize);
             fileprops.name = fileprops.name.toLowerCase();
+            fileprops.filter(filter)
             cb(null, `${fileprops.name}.${extension(file.mimetype)}`)
         }
     });
