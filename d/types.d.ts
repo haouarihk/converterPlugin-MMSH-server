@@ -121,15 +121,12 @@ export interface ReqestData {
 
 export namespace Props {
     interface compileWithLink {
-        req: Request;
-        token: string;
         nameprops: NamePro;
         compiler: Compiler;
         cmd: string;
     }
 
     interface compileFile {
-        req: Request;
         token: string;
         nameprops: NamePro;
         compileIndex: number;

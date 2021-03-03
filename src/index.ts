@@ -272,7 +272,7 @@ export default class CompilersHandler {
 
 
         // compiling 
-        await this.compileFile({ req, token, nameprops, compileIndex }).catch(errlog);
+        await this.compileFile({ token, nameprops, compileIndex }).catch(errlog);
 
 
         // delete the input file
@@ -395,7 +395,7 @@ export default class CompilersHandler {
      * @param nameprop name using {NamePro} class
      * @param compileIndex index of the compiler that's been used
      */
-    async compileFile({ req, token, nameprops, compileIndex }: Props.compileFile) {
+    async compileFile({ token, nameprops, compileIndex }: Props.compileFile) {
 
         const command = await this.Command(nameprops, compileIndex);
         const compiler = this.compilers[compileIndex]
@@ -406,7 +406,7 @@ export default class CompilersHandler {
         const cmd = spacePutter(compiler.commander) + spacePutter(compilerPath) + spacePutter(command);
 
         if (compiler.CompilerLink) {
-            return await this.compileWithLink({ req, token, nameprops, compiler, cmd })
+            return await this.compileWithLink({ nameprops, compiler, cmd })
         }
 
         return this.execShellCommand(cmd, (stdout: string) => {
@@ -415,9 +415,7 @@ export default class CompilersHandler {
         })
     }
 
-    compileWithLink(props: Props.compileWithLink) {
-        const { req, token, nameprops, compiler, cmd } = props;
-
+    compileWithLink({ nameprops, compiler, cmd }: Props.compileWithLink) {
         return new Promise(async (solve, reject) => {
             const callback: string = `/${this.alldir.maindir}/cb/${nameprops.name}`;
             const reqData: ReqestData = { cmd, name: nameprops.name, callback: this.href + callback };
