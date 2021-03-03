@@ -345,17 +345,15 @@ export default class CompilersHandler {
         const ipath = this.inputdir;
         const opath = this.outputdir;
 
-        const name = nameProps.name
-        const FileNameWT = nameProps.withType();
-
+        const name = nameProps.name;
+        const iNameWT = nameProps.withType();
         const oNameWT = nameProps.withType(compiler.outputT);
 
-        const pathToInput = join(ipath, FileNameWT);
+        const pathToInput = join(ipath, iNameWT);
         const pathtoOutput = join(opath, name);
 
-
-        const pathToInputWithType = `${join(ipath, FileNameWT)}`
-        const pathToOutputWithType = `${join(opath, name, FileNameWT)}`
+        const pathToInputWithType = `${join(ipath, iNameWT)}`
+        const pathToOutputWithType = `${join(opath, name, oNameWT)}`
 
         if (compiler.buildOutputDirectory)
             await createDir(pathtoOutput)
@@ -377,7 +375,7 @@ export default class CompilersHandler {
 
         compilerCommand = compilerCommand.replace(/#{oname.type}/gi, oNameWT)
 
-        compilerCommand = compilerCommand.replace(/#{name.type}/gi, FileNameWT)
+        compilerCommand = compilerCommand.replace(/#{name.type}/gi, iNameWT)
 
 
         return compilerCommand
