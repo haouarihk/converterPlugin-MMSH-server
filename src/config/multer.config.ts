@@ -18,14 +18,14 @@ interface upload_file_propies {
 
 export default function upload_file(props: upload_file_propies, filter: FilterOps) {
     var storage = multer.diskStorage({
-        destination: (req: Request<any, any, any, any, Record<string, any>>, file: any, cb: (error: Error | null, filename: string) => void) => {
+        destination: (_req: Request<any, any, any, any, Record<string, any>>, file: any, cb: (error: Error | null, filename: string) => void) => {
             cb(null, props.dest)
         },
-        filename: (req: Request<any, any, any, any, Record<string, any>>, file: any, cb: (error: Error | null, filename: string) => void) => {
+        filename: async (_req: Request<any, any, any, any, Record<string, any>>, file: any, cb: (error: Error | null, filename: string) => void) => {
             const fileprops = new NamePro(file.originalname)
             fileprops.randomize(props.randomStringSize);
             fileprops.name = fileprops.name.toLowerCase();
-            fileprops.filter(filter)
+            await fileprops.filter(filter)
             cb(null, `${fileprops.name}.${extension(file.mimetype)}`)
         }
     });
